@@ -159,7 +159,7 @@ static int print_rss_info(struct seq_file *m)
 			temp_rss.pid = task->pid;
 			memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
 
-			memcpy(rss_list[RSS_NUM-1], temp_rss, sizeof(struct my_rss));
+			memcpy(&rss_list[RSS_NUM-1], &temp_rss, sizeof(struct my_rss));
 			printk("before sort");
 			sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
 			printk("after sort");
