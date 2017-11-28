@@ -842,6 +842,7 @@ deps_/home/jiwan/hw2/mymodule/hw2.o := \
     $(wildcard include/config/memory/balloon.h) \
     $(wildcard include/config/balloon/compaction.h) \
   include/linux/sort.h \
+  include/linux/vmalloc.h \
 
 /home/jiwan/hw2/mymodule/hw2.o: $(deps_/home/jiwan/hw2/mymodule/hw2.o)
 

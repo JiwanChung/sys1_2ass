@@ -114,6 +114,7 @@ static int print_rss_info(struct seq_file *m)
 	struct task_struct *task;
 	struct mm_struct *t_mm;
 	long val;
+	const char temp[TASK_COMM_LEN] = {'0'};
 	// temp struct
 	struct my_rss temp_rss;
 	// allocating memory for array to store top 5 rss infos
@@ -124,8 +125,8 @@ static int print_rss_info(struct seq_file *m)
 	{
 		temp_rss.rss = 0;
 		temp_rss.pid = 0;
-		temp_rss.comm = "NULL";
-
+		memcpy(temp_rss.comm, temp, sizeof(temp));
+		
 		rss_list[i] = temp_rss;
 	}
 
