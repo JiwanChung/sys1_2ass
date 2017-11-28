@@ -143,6 +143,7 @@ static int print_rss_info(struct seq_file *m)
 		{
 			// init val
 			val = 0;
+			printk("pid: %d", task->pid);
 			
 			t_mm = task->mm;
 			// get anon val
@@ -155,20 +156,16 @@ static int print_rss_info(struct seq_file *m)
 			// store if the rss value is larger than the least stored
 			if (rss_list[RSS_NUM-1].rss < val)
 			{
-				// init val
-				val = 0;
-	
 				temp_rss.rss = val;
 				temp_rss.pid = task->pid;
 				memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
 	
 				memcpy(&rss_list[RSS_NUM-1], &temp_rss, sizeof(struct my_rss));
-				printk("before sort");
 				sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
-				printk("after sort");
 			}
 		}
 	}
+	printk("iter done");
 
 	// print legend
 	seq_printf(m, "%-4s", "pid");
@@ -176,10 +173,13 @@ static int print_rss_info(struct seq_file *m)
 	seq_printf(m, "%20s\n", "comm");
 
 	for (i=0; i<RSS_NUM; i++) {
+		printk("%dth iter", i);
 		seq_printf(m, "%-4s", rss_list[i].pid);
 		seq_printf(m, "%10s", rss_list[i].rss);
 		seq_printf(m, "%20s\n", rss_list[i].comm);
 	}
+
+	vfree(rss_list);
 
 	return 0;
 }	
