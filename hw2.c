@@ -75,8 +75,8 @@ static int print_buddy_info(struct seq_file *m)
 		// print name and free area for every zone
 		seq_printf(m, "Node 0 Zone %8s", zone_it->name);
 		for(i = 0; i < 11; i++)
-			seq_printf(m, "%6lu", zone_it->free_area[i]);
-		print_bar(m);
+			seq_printf(m, "%6lu", zone_it->free_area[i].nr_free);
+		seq_printf(m, "\n");
 	}
 	return 0;
 }
