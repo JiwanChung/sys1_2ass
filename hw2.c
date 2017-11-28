@@ -3,9 +3,20 @@
 #include <linux/seq_file.h>
 #include <linux/mmzone.h>
 #include <linux/nodemask.h>
+#include <linux/sched.h>
+#include <linux/mm.h>
+#include <linux/mm_types.h>
+#include <linux/sort.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
+
+// struct to store rss info
+struct my_rss {
+	long rss;
+	pid_t pid;
+	char comm[TASK_COMM_LEN];
+};
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
@@ -81,12 +92,83 @@ static int print_buddy_info(struct seq_file *m)
 	return 0;
 }
 
+// simple compare func for rss sorting
+static int compare(const void *lhs, const void *rhs)
+{
+	struct my_rss lhs_rss = *(const struct my_rss *)(lhs);
+	struct my_rss rhs_rss = *(const struct my_rss *)(rhs);
+
+	if (lhs_rss.rss < rhs_rss.rss) return 1;
+	if (lhs_rss.rss > rhs_rss.rss) return -1;
+	return 0;
+}
+
+// printing the top 5 rss tasks
+static int print_rss_info(struct seq_file *m)
+{
+	// init vars
+	int i;
+	struct task_struct *task;
+	struct mm_struct *t_mm;
+	long val;
+	// array to store top 5 rss tasks
+	struct my_rss rss_list[5];
+	// temp struct
+	struct my_rss temp_rss;
+
+	// print title
+	print_bar(m);
+	seq_printf(m, "RSS Information\n");
+	print_bar(m);
+
+	// find top 5 rss tasks by iterating the task list
+	for_each_process(task)
+	{
+		t_mm = task->mm;
+		// get anon val
+		val += get_mm_counter(t_mm, MM_ANONPAGES);
+		// get file val
+		val += get_mm_counter(t_mm, MM_FILEPAGES);
+		// get shmem val
+		val += get_mm_counter(t_mm, MM_SHMEMPAGES);
+	
+		if (rss_list[4].rss < val)
+		{
+			temp_rss.rss = val;
+			temp_rss.pid = task->pid;
+			memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
+
+			rss_list[4] = temp_rss;
+
+			sort(rss_list, 5, sizeof(struct my_rss), &compare, NULL);
+		}
+	}
+
+	// print legend
+	seq_printf(m, "%-4s", "pid");
+	seq_printf(m, "%10s", "rss");
+	seq_printf(m, "%20s\n", "comm");
+
+	for (i=0; i<5; i++) {
+		seq_printf(m, "%-4s", rss_list[i].pid);
+		seq_printf(m, "%10s", rss_list[i].rss);
+		seq_printf(m, "%20s\n", rss_list[i].comm);
+	}
+
+	return 0;
+	
+	}	
+
+	
+
+
 // func for printing infos to proc.
 // jobs are delegated corresponding functions
 static int write_to_proc(struct seq_file *m)
 {
-	print_global_info(m);
-	print_buddy_info(m);
+	//print_global_info(m);
+	//print_buddy_info(m);
+	print_rss_info(m);
 	return 0;
 }
 
