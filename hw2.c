@@ -119,7 +119,7 @@ static int print_rss_info(struct seq_file *m)
 	// temp struct
 	struct my_rss temp_rss;
 	// allocating memory for array to store top 5 rss infos
-	struct my_rss *rss_list = kmalloc(RSS_NUM, sizeof(struct my_rss));
+	struct my_rss *rss_list = kmalloc(RSS_NUM * sizeof(struct my_rss), GFP_KERNEL);
 
 	// init rss_list
 	for(i = 0; i < RSS_NUM; i++)
@@ -182,8 +182,8 @@ static int print_rss_info(struct seq_file *m)
 
 	for (i=0; i<RSS_NUM; i++) {
 		printk("%dth iter", i);
-		seq_printf(m, "%-4s", rss_list[i].pid);
-		seq_printf(m, "%10s", rss_list[i].rss);
+		seq_printf(m, "%d", rss_list[i].pid);
+		seq_printf(m, "%lu", rss_list[i].rss);
 		seq_printf(m, "%20s\n", rss_list[i].comm);
 	}
 
