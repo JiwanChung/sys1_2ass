@@ -138,31 +138,35 @@ static int print_rss_info(struct seq_file *m)
 	// find top 5 rss tasks by iterating the task list
 	for_each_process(task)
 	{
-		// init val
-		val = 0;
-		
-		t_mm = task->mm;
-		// get anon val
-		val += get_mm_counter(t_mm, MM_ANONPAGES);
-		// get file val
-		val += get_mm_counter(t_mm, MM_FILEPAGES);
-		// get shmem val
-		val += get_mm_counter(t_mm, MM_SHMEMPAGES);
-	
-		// store if the rss value is larger than the least stored
-		if (rss_list[RSS_NUM-1].rss < val)
+		// a task might not have mm if it's a kernel task
+		if(task->mm)
 		{
 			// init val
 			val = 0;
-
-			temp_rss.rss = val;
-			temp_rss.pid = task->pid;
-			memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
-
-			memcpy(&rss_list[RSS_NUM-1], &temp_rss, sizeof(struct my_rss));
-			printk("before sort");
-			sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
-			printk("after sort");
+			
+			t_mm = task->mm;
+			// get anon val
+			val += get_mm_counter(t_mm, MM_ANONPAGES);
+			// get file val
+			val += get_mm_counter(t_mm, MM_FILEPAGES);
+			// get shmem val
+			val += get_mm_counter(t_mm, MM_SHMEMPAGES);
+		
+			// store if the rss value is larger than the least stored
+			if (rss_list[RSS_NUM-1].rss < val)
+			{
+				// init val
+				val = 0;
+	
+				temp_rss.rss = val;
+				temp_rss.pid = task->pid;
+				memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
+	
+				memcpy(&rss_list[RSS_NUM-1], &temp_rss, sizeof(struct my_rss));
+				printk("before sort");
+				sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
+				printk("after sort");
+			}
 		}
 	}
 
