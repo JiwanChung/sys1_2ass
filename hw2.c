@@ -13,6 +13,8 @@
 #define STUDENT_NAME "Jiwan Chung"
 
 #define RSS_NUM 5
+#define MAX_BUF_PID 5
+#define MAX_BUF_RSS 10
 
 // struct to store rss info
 struct my_rss {
@@ -120,6 +122,9 @@ static int print_rss_info(struct seq_file *m)
 	struct my_rss temp_rss;
 	// allocating memory for array to store top 5 rss infos
 	struct my_rss *rss_list = kmalloc(RSS_NUM * sizeof(struct my_rss), GFP_KERNEL);
+	// define buf strings
+	char buf_pid[MAX_BUF_PID];
+	char buf_rss[MAX_BUF_RSS];
 
 	// init rss_list
 	for(i = 0; i < RSS_NUM; i++)
@@ -176,14 +181,13 @@ static int print_rss_info(struct seq_file *m)
 	seq_printf(m, "%10s", "rss");
 	seq_printf(m, "%20s\n", "comm");
 
-	for(i = 0; i < RSS_NUM; i++){
-		printk("RESULT rss: %lu, pid: ", rss_list[i].rss, rss_list[i].pid);
-	}
-
+	// print actual rss infos
 	for (i=0; i<RSS_NUM; i++) {
-		printk("%dth iter", i);
-		seq_printf(m, "%d", rss_list[i].pid);
-		seq_printf(m, "%lu", rss_list[i].rss);
+		sprintf(buf_pid, "%d", rss_list[i].pid);
+		sprintf(buf_rss, "%lu", rss_list[i].rss);
+
+		seq_printf(m, "%-4s", buf_pid);
+		seq_printf(m, "%10s", buf_rss);
 		seq_printf(m, "%20s\n", rss_list[i].comm);
 	}
 
