@@ -8,6 +8,7 @@
 #include <linux/mm_types.h>
 #include <linux/sort.h>
 #include <linux/slab.h>
+#include <linux/interrupt.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -15,6 +16,7 @@
 #define RSS_NUM 5
 #define MAX_BUF_PID 5
 #define MAX_BUF_RSS 10
+#define PERIOD 5 // debug period value
 
 // struct to store rss info
 struct my_rss {
@@ -22,6 +24,13 @@ struct my_rss {
 	pid_t pid;
 	char comm[TASK_COMM_LEN];
 };
+
+// store period input
+static int period = PERIOD; 
+
+// declaring memory-info-checking tasklet
+static void hw2_tasklet_handler(unsigned long flag);
+DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, &period);
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
@@ -196,8 +205,36 @@ static int print_rss_info(struct seq_file *m)
 	return 0;
 }	
 
-	
+// printing virtual memory address info
+static int print_vma_info(struct seq_file *m)
+{
+	struct task_struct *chosen_task, *task;
+	struct vm_area_struct *vm_it;
+	int i, vma_number;
 
+	// print title
+	print_bar(m);
+	seq_printf(m, "Virtual Memory Address Information\n");
+	seq_printf(m, "Process (%15s:%lu)\n", "vi", 9634);
+	print_bar(m);
+
+	for_each_process(task)
+	{
+		if(task->mm) {
+			chosen_task = task;
+			break;
+		}
+	}
+
+	vma_number = chosen_task->mm->map_count;
+	vm_it = chosen_task->mm->mmap;
+	for(i = 0;i < vma_number;i++) {
+		printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
+		vm_it = vm_it->vm_next;
+	}
+
+	return 0;
+}
 
 // func for printing infos to proc.
 // jobs are delegated corresponding functions
@@ -205,7 +242,9 @@ static int write_to_proc(struct seq_file *m)
 {
 	//print_global_info(m);
 	//print_buddy_info(m);
-	print_rss_info(m);
+	//print_rss_info(m);
+	print_vma_info(m);
+
 	return 0;
 }
 
@@ -231,11 +270,78 @@ hw2_fops = {
 	.release = single_release,
 };
 
+// tasklet handler func
+static void hw2_tasklet_handler(unsigned long flag)
+{
+	struct task_struct *task;
+	int counter = 0;
+	int process = 0;
+	struct task_struct *chosen_task;
+	tasklet_disable(&hw2_tasklet);
+/*
+	// choose a process	
+	for_each_process(task)
+	{
+		if(task->mm)
+			counter++
+	}
+	// pick a random one
+	get_random_bytes(&process, sizeof(int));
+	process = process % counter;
+	// actual choosing
+	for_each_process(task)
+	{
+		if(task->mm) {
+			if(counter < 1){
+				chosen_task = task;
+				break;
+			}
+			else
+				counter--;
+		}
+	}
+	// account for possible process number change between two iterations
+	if (!chosen_task) {
+		for_each_process(task)
+		{
+			if(task->mm) {
+				chosen_task = task;
+				break;
+			}
+		}
+	}
+
+	// store vma stats of the task
+	vma_number = chosen_task->mm->map_count;
+	vm_it = chosen_task->mm->mmap;
+	for(i = 0;i < vma_number;i++) {
+	}
+
+	//wait for PERIOD time
+*/
+
+	tasklet_enable(&hw2_tasklet);
+}
+
+// initial scheduling of the tasklet
+static int tlet_create(int period)
+{
+	tasklet_schedule(&hw2_tasklet);
+	printk("tasklet scheduled");
+
+	return 0;
+}
+
 // module init func
 static int __init hw2_init(void)
 {
+	period = PERIOD;
+
 	// load proc
 	proc_create("hw2", 0, NULL, &hw2_fops);
+	// load tasklet for reading memory info of a random process
+	tlet_create(period);
+
 	return 0;
 }
 
@@ -244,6 +350,11 @@ static void __exit hw2_exit(void)
 {
 	// remove proc before exiting module
 	remove_proc_entry("hw2", NULL);
+
+	// remove tasklet
+	tasklet_disable(&hw2_tasklet);
+	tasklet_kill(&hw2_tasklet);
+	printk("tasklet killed");
 }
 
 MODULE_LICENSE("GPL");
