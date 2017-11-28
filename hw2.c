@@ -103,6 +103,7 @@ static int compare(const void *lhs, const void *rhs)
 
 	if (lhs_rss.rss < rhs_rss.rss) return 1;
 	if (lhs_rss.rss > rhs_rss.rss) return -1;
+	printk("comp: %l", lhs_rss.rss);
 	return 0;
 }
 
@@ -152,7 +153,7 @@ static int print_rss_info(struct seq_file *m)
 			val += get_mm_counter(t_mm, MM_FILEPAGES);
 			// get shmem val
 			val += get_mm_counter(t_mm, MM_SHMEMPAGES);
-		
+			printk("val: %l", val);	
 			// store if the rss value is larger than the least stored
 			if (rss_list[RSS_NUM-1].rss < val)
 			{
@@ -161,6 +162,10 @@ static int print_rss_info(struct seq_file *m)
 				memcpy(rss_list[RSS_NUM-1].comm, task->comm, TASK_COMM_LEN * sizeof(char));
 
 				sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
+			}
+			printk("---");
+			for(i = 0; i < RSS_NUM; i++){
+				printk("SORTED rss: %l", rss_list[i]);
 			}
 		}
 	}
