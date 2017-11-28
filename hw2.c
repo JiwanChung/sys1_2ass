@@ -119,6 +119,16 @@ static int print_rss_info(struct seq_file *m)
 	// allocating memory for array to store top 5 rss infos
 	struct my_rss *rss_list = vmalloc_user(RSS_NUM * sizeof(struct my_rss));
 
+	// init rss_list
+	for(i = 0; i < RSS_NUM; i++)
+	{
+		temp_rss.rss = 0;
+		temp_rss.pid = 0;
+		temp_rss.com = "NULL";
+
+		rss_list[i] = temp_rss;
+	}
+
 	// print title
 	print_bar(m);
 	seq_printf(m, "RSS Information\n");
@@ -166,8 +176,7 @@ static int print_rss_info(struct seq_file *m)
 	}
 
 	return 0;
-	
-	}	
+}	
 
 	
 
