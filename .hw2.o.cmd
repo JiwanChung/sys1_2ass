@@ -842,7 +842,15 @@ deps_/home/jiwan/hw2/mymodule/hw2.o := \
     $(wildcard include/config/memory/balloon.h) \
     $(wildcard include/config/balloon/compaction.h) \
   include/linux/sort.h \
-  include/linux/vmalloc.h \
+  include/linux/slab.h \
+    $(wildcard include/config/debug/slab.h) \
+    $(wildcard include/config/failslab.h) \
+    $(wildcard include/config/have/hardened/usercopy/allocator.h) \
+    $(wildcard include/config/slab.h) \
+    $(wildcard include/config/slub.h) \
+  include/linux/kmemleak.h \
+    $(wildcard include/config/debug/kmemleak.h) \
+  include/linux/kasan.h \
 
 /home/jiwan/hw2/mymodule/hw2.o: $(deps_/home/jiwan/hw2/mymodule/hw2.o)
 

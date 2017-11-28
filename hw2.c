@@ -7,7 +7,7 @@
 #include <linux/mm.h>
 #include <linux/mm_types.h>
 #include <linux/sort.h>
-#include <linux/vmalloc.h>
+#include <linux/slab.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -118,7 +118,7 @@ static int print_rss_info(struct seq_file *m)
 	// temp struct
 	struct my_rss temp_rss;
 	// allocating memory for array to store top 5 rss infos
-	struct my_rss *rss_list = vmalloc_user(RSS_NUM * sizeof(struct my_rss));
+	struct my_rss *rss_list = kmalloc(RSS_NUM, sizeof(struct my_rss));
 
 	// init rss_list
 	for(i = 0; i < RSS_NUM; i++)
@@ -156,11 +156,10 @@ static int print_rss_info(struct seq_file *m)
 			// store if the rss value is larger than the least stored
 			if (rss_list[RSS_NUM-1].rss < val)
 			{
-				temp_rss.rss = val;
-				temp_rss.pid = task->pid;
-				memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
-	
-				memcpy(&rss_list[RSS_NUM-1], &temp_rss, sizeof(struct my_rss));
+				rss_list[RSS_NUM-1].rss = val;
+				rss_list[RSS_NUM-1].pid = task->pid;
+				memcpy(rss_list[RSS_NUM-1].comm, task->comm, TASK_COMM_LEN * sizeof(char));
+
 				sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
 			}
 		}
@@ -179,7 +178,7 @@ static int print_rss_info(struct seq_file *m)
 		seq_printf(m, "%20s\n", rss_list[i].comm);
 	}
 
-	vfree(rss_list);
+	kfree(rss_list);
 
 	return 0;
 }	
