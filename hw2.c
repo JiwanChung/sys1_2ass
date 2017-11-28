@@ -103,7 +103,7 @@ static int compare(const void *lhs, const void *rhs)
 
 	if (lhs_rss.rss < rhs_rss.rss) return 1;
 	if (lhs_rss.rss > rhs_rss.rss) return -1;
-	printk("comp: %l", lhs_rss.rss);
+	printk("comp: %lu", lhs_rss.rss);
 	return 0;
 }
 
@@ -153,7 +153,7 @@ static int print_rss_info(struct seq_file *m)
 			val += get_mm_counter(t_mm, MM_FILEPAGES);
 			// get shmem val
 			val += get_mm_counter(t_mm, MM_SHMEMPAGES);
-			printk("val: %l", val);	
+			printk("val: %lu", val);	
 			// store if the rss value is larger than the least stored
 			if (rss_list[RSS_NUM-1].rss < val)
 			{
@@ -165,7 +165,7 @@ static int print_rss_info(struct seq_file *m)
 			}
 			printk("---");
 			for(i = 0; i < RSS_NUM; i++){
-				printk("SORTED rss: %l", rss_list[i]);
+				printk("SORTED rss: %lu, pid: ", rss_list[i].rss, rss_list[i].pid);
 			}
 		}
 	}
@@ -175,6 +175,10 @@ static int print_rss_info(struct seq_file *m)
 	seq_printf(m, "%-4s", "pid");
 	seq_printf(m, "%10s", "rss");
 	seq_printf(m, "%20s\n", "comm");
+
+	for(i = 0; i < RSS_NUM; i++){
+		printk("RESULT rss: %lu, pid: ", rss_list[i].rss, rss_list[i].pid);
+	}
 
 	for (i=0; i<RSS_NUM; i++) {
 		printk("%dth iter", i);
