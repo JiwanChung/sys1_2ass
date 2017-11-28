@@ -7,6 +7,7 @@
 #include <linux/mm.h>
 #include <linux/mm_types.h>
 #include <linux/sort.h>
+#include <linux/vmalloc.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -126,6 +127,9 @@ static int print_rss_info(struct seq_file *m)
 	// find top 5 rss tasks by iterating the task list
 	for_each_process(task)
 	{
+		// init val
+		val = 0;
+		
 		t_mm = task->mm;
 		// get anon val
 		val += get_mm_counter(t_mm, MM_ANONPAGES);
@@ -134,8 +138,12 @@ static int print_rss_info(struct seq_file *m)
 		// get shmem val
 		val += get_mm_counter(t_mm, MM_SHMEMPAGES);
 	
+		// store if the rss value is larger than the least stored
 		if (rss_list[RSS_NUM-1].rss < val)
 		{
+			// init val
+			val = 0;
+
 			temp_rss.rss = val;
 			temp_rss.pid = task->pid;
 			memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
