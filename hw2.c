@@ -11,6 +11,8 @@
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
 
+#define RSS_NUM 5
+
 // struct to store rss info
 struct my_rss {
 	long rss;
@@ -111,10 +113,10 @@ static int print_rss_info(struct seq_file *m)
 	struct task_struct *task;
 	struct mm_struct *t_mm;
 	long val;
-	// array to store top 5 rss tasks
-	struct my_rss rss_list[5];
 	// temp struct
 	struct my_rss temp_rss;
+	// allocating memory for array to store top 5 rss infos
+	struct my_rss *rss_list = vmalloc_user(RSS_NUM * sizeof(struct my_rss));
 
 	// print title
 	print_bar(m);
@@ -132,15 +134,15 @@ static int print_rss_info(struct seq_file *m)
 		// get shmem val
 		val += get_mm_counter(t_mm, MM_SHMEMPAGES);
 	
-		if (rss_list[4].rss < val)
+		if (rss_list[RSS_NUM-1].rss < val)
 		{
 			temp_rss.rss = val;
 			temp_rss.pid = task->pid;
 			memcpy(temp_rss.comm, task->comm, TASK_COMM_LEN);
 
-			rss_list[4] = temp_rss;
+			rss_list[RSS_NUM-1] = temp_rss;
 
-			sort(rss_list, 5, sizeof(struct my_rss), &compare, NULL);
+			sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
 		}
 	}
 
@@ -149,7 +151,7 @@ static int print_rss_info(struct seq_file *m)
 	seq_printf(m, "%10s", "rss");
 	seq_printf(m, "%20s\n", "comm");
 
-	for (i=0; i<5; i++) {
+	for (i=0; i<RSS_NUM; i++) {
 		seq_printf(m, "%-4s", rss_list[i].pid);
 		seq_printf(m, "%10s", rss_list[i].rss);
 		seq_printf(m, "%20s\n", rss_list[i].comm);
