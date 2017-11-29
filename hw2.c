@@ -462,6 +462,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	int period = tempdata->period;
 	struct table_type *table_p = &(tempdata->table);
 	struct vma_type *vma_p = &(tempdata->vma);
+	struct task_type *tsk_p = &(tempdata->task);
 	struct task_struct *chosen_task;
 
 	tempdata->last_update_time = jiffies;
@@ -470,7 +471,10 @@ static void hw2_tasklet_handler(unsigned long data)
 
 	// fix a task
 	chosen_task = pick_a_process();
-	printk("PId: %d", chosen_task->pid);
+	printk("PID: %d", chosen_task->pid);
+
+	// store general info
+	tsk_p->pid = chosen_task->pid;
 
 	//wait for PERIOD time
 	init_timer(&my_timer);
