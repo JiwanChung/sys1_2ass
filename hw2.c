@@ -34,6 +34,10 @@ struct my_rss {
 };
 
 // store task data each time
+struct task_type {
+	pid_t pid;
+	char comm[TASK_COMM_LEN];
+};
 struct table_type {
 	int a;
 };
@@ -44,8 +48,10 @@ struct tlet_type {
 	int period;
 	struct table_type table;
 	struct vma_type vma;
+	struct task_type task;
+	unsigned long last_update_time;
 };
-struct tlet_type tasklet_data = {5, NULL};
+struct tlet_type tasklet_data = {PERIOD, NULL};
 
 // declaring memory-info-checking tasklet
 static void hw2_tasklet_handler(unsigned long flag);
@@ -101,7 +107,7 @@ static int print_global_info(struct seq_file *m)
 {
 	print_bar(m);
 	seq_printf(m, "Student ID: %s	Name: %s\n", STUDENT_ID, STUDENT_NAME);
-	seq_printf(m, "Last update time %llu ms\n", 39607692);
+	seq_printf(m, "Last update time %llu ms\n", tasklet_data.last_update_time);
 	return 0;
 }
 
@@ -284,24 +290,18 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	struct vm_area_struct *vm_it;
 	int i, vma_number;
 	struct mm_struct *mm;
+	struct task_type *tsk = &(tasklet_data.task);
+	struct vma_type *vma = &(tasklet_data.vma);
 
 	// print title
 	print_bar(m);
 	seq_printf(m, "Virtual Memory Address Information\n");
-	seq_printf(m, "Process (%15s:%lu)\n", "vi", 9634);
+	seq_printf(m, "Process (%15s:%lu)\n", tsk->comm, tsk->pid);
 	print_bar(m);
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
 	mm = chosen_task->mm;
-	for(i = 0;i < vma_number;i++) {
-		seq_printf(m, "%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
-		if(vm_it->vm_flags & VM_STACK)
-			seq_printf(m, "stack\n");
-		else if(vm_it->vm_flags & VM_SHARED)
-			seq_printf(m, "shared\n");
-		vm_it = vm_it->vm_next;
-	}
 
 	seq_printf(m, "0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
 		mm->start_code, mm->end_code, calc_pages(mm->start_code,mm->end_code));
@@ -416,14 +416,11 @@ static int write_to_proc(struct seq_file *m)
 	chosen_task = pick_a_process();
 	printk("PId: %d", chosen_task->pid);
 
-
-	//print_global_info(m);
+	print_global_info(m);
 	//print_buddy_info(m);
 	//print_rss_info(m);
-
-	
-	// print_vma_info(m, chosen_task);
-	print_pagetable_info(m, chosen_task);
+	print_vma_info(m, chosen_task);
+	//print_pagetable_info(m, chosen_task);
 
 	return 0;
 }
@@ -466,6 +463,8 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct table_type *table_p = &(tempdata->table);
 	struct vma_type *vma_p = &(tempdata->vma);
 	struct task_struct *chosen_task;
+
+	tempdata->last_update_time = jiffies;
 
 	printk( "%s\n", "tlet called!" );
 
