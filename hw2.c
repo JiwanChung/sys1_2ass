@@ -509,12 +509,19 @@ static void hw2_tasklet_handler(unsigned long data)
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
-	for(i = 0;i < vma_number;i++) {
-		if(vm_it->vm_flags & VM_EXEC & ~VM_WRITE & ~VM_STACK)
-			printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+
+	// initial go
+	vma_p->start_lib = vm_it->vm_start;
+	vm_it = vm_it->vm_next;
+	for(i = 1;i < vma_number;i++) {
+		if(vm_it->vm_flags & VM_EXEC & ~VM_WRITE & ~VM_STACK) {
+			//printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+			vma_p->end_lib = vm_it->vm_end;
+		}
 			
 		vm_it = vm_it->vm_next;
 	}
+	printk("VmLib calc: %lu - %lu, %lu", vma_p->start_lib, vma_p->end_lib, calc_pages(vma_p->start_lib, vma_p->end_lib));
 
 	// stack
 	vma_p->start_stack = chosen_task->mm->start_stack;
