@@ -366,6 +366,26 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	seq_printf(m, "        PMD Value               : 0x%08lx\n", pmd_val(*pmd));
 	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pmd_pfn(*pmd));
 
+	// print PTE title
+	print_bar(m);
+	seq_printf(m, "4 Level Paging: Page Table Entry Information \n");
+	print_bar(m);
+
+	// print PTE info
+	seq_printf(m, "code    PTE Address             : 0x%08lx\n", pte_page(*pte));
+	seq_printf(m, "        PTE Value               : 0x%08lx\n", pte_val(*pte));
+	seq_printf(m, "        +Page Base Address      : 0x%08lx\n", pte_pfn(*pte));
+
+	seq_printf(m, "        +Dirty Bit              : %u\n", pte_flags(*pte) & _PAGE_DIRTY ? 1 : 0);
+	seq_printf(m, "        +Accessed Bit           : %u\n", pte_flags(*pte) & _PAGE_ACCESSED ? 1 : 0);
+	seq_printf(m, "        +Cache Disable Bit      : %s\n", pte_flags(*pte) & _PAGE_PCD ? "true" : "false");
+	seq_printf(m, "        +Page Write-Through     : %s\n", pte_flags(*pte) & _PAGE_PWT ? "write-through" : "write-back");
+	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pte_flags(*pte) & _PAGE_USER ? "user" : "supervisor");
+	seq_printf(m, "        +Read/Write Bit         : %s\n", pte_flags(*pte) & _PAGE_RW ? "read-write": "read-only");
+	seq_printf(m, "        +Page Present Bit       : %u\n", pte_flags(*pte) & _PAGE_PRESENT);
+
+
+
 	return 0;
 }
 
