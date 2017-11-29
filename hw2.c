@@ -503,6 +503,9 @@ static void __exit hw2_exit(void)
 {
 	// remove proc before exiting module
 	remove_proc_entry("hw2", NULL);
+	
+	// remove timer
+	del_timer(&my_timer);
 
 	// remove tasklet
 	tasklet_kill(&hw2_tasklet);
