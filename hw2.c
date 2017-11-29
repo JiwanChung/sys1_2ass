@@ -30,7 +30,7 @@ static int period = PERIOD;
 
 // declaring memory-info-checking tasklet
 static void hw2_tasklet_handler(unsigned long flag);
-DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, &period);
+DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, (unsigned long) &period);
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
@@ -273,11 +273,11 @@ hw2_fops = {
 // tasklet handler func
 static void hw2_tasklet_handler(unsigned long flag)
 {
-	struct task_struct *task;
-	int counter = 0;
-	int process = 0;
-	struct task_struct *chosen_task;
-	tasklet_disable(&hw2_tasklet);
+	//struct task_struct *task;
+	//int counter = 0;
+	//int process = 0;
+	//struct task_struct *chosen_task;
+	
 /*
 	// choose a process	
 	for_each_process(task)
@@ -320,16 +320,8 @@ static void hw2_tasklet_handler(unsigned long flag)
 	//wait for PERIOD time
 */
 
-	tasklet_enable(&hw2_tasklet);
-}
-
-// initial scheduling of the tasklet
-static int tlet_create(int period)
-{
-	tasklet_schedule(&hw2_tasklet);
-	printk("tasklet scheduled");
-
-	return 0;
+	printk( "%s\n", (char *)data );
+	return;
 }
 
 // module init func
@@ -340,8 +332,9 @@ static int __init hw2_init(void)
 	// load proc
 	proc_create("hw2", 0, NULL, &hw2_fops);
 	// load tasklet for reading memory info of a random process
-	tlet_create(period);
-
+	tasklet_schedule(&hw2_tasklet);
+	printk("tasklet scheduled");
+	
 	return 0;
 }
 
@@ -352,9 +345,10 @@ static void __exit hw2_exit(void)
 	remove_proc_entry("hw2", NULL);
 
 	// remove tasklet
-	tasklet_disable(&hw2_tasklet);
 	tasklet_kill(&hw2_tasklet);
 	printk("tasklet killed");
+	
+	return;
 }
 
 MODULE_LICENSE("GPL");
