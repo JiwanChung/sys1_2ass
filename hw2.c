@@ -219,21 +219,11 @@ static int calc_pages(unsigned long start, unsigned long end)
 	return pages;
 }
 
-// printing virtual memory address info
-static int print_vma_info(struct seq_file *m)
+static struct task_struct* pick_a_process(struct seq_file *m)
 {
 	struct task_struct *chosen_task, *task;
-	struct mm_struct *mm;
-	struct vm_area_struct *vm_it;
-	int i, vma_number;
-	int counter=0;
-	int process=0;
-
-	// print title
-	print_bar(m);
-	seq_printf(m, "Virtual Memory Address Information\n");
-	seq_printf(m, "Process (%15s:%lu)\n", "vi", 9634);
-	print_bar(m);
+	unsigned int counter=0;
+	unsigned int process=0;
 
 	// choose a process	
 	for_each_process(task)
@@ -244,7 +234,7 @@ static int print_vma_info(struct seq_file *m)
 	// pick a random one
 	get_random_bytes(&process, sizeof(int));
 	process = process % counter;
-	seq_printf(m, "process: %d, counter: %d\n", process, counter);
+	seq_printf(m, "process: %u, counter: %u\n", process, counter);
 	// actual choosing
 	for_each_process(task)
 	{
@@ -257,7 +247,6 @@ static int print_vma_info(struct seq_file *m)
 				process--;
 		}
 	}
-	seq_printf(m, "chosen pid: %d\n", chosen_task->pid);
 	// account for possible process number change between two iterations
 	if (!chosen_task) {
 		for_each_process(task)
@@ -269,6 +258,22 @@ static int print_vma_info(struct seq_file *m)
 		}
 	}
 	seq_printf(m, "chosen pid: %d\n", chosen_task->pid);
+	
+	return chosen_task;
+}
+
+// printing virtual memory address info
+static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
+{
+	struct vm_area_struct *vm_it;
+	int i, vma_number;
+	struct mm_struct *mm;
+
+	// print title
+	print_bar(m);
+	seq_printf(m, "Virtual Memory Address Information\n");
+	seq_printf(m, "Process (%15s:%lu)\n", "vi", 9634);
+	print_bar(m);
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
@@ -302,10 +307,15 @@ static int print_vma_info(struct seq_file *m)
 // jobs are delegated corresponding functions
 static int write_to_proc(struct seq_file *m)
 {
+	struct task_struct *chosen_task;
+
 	//print_global_info(m);
 	//print_buddy_info(m);
 	//print_rss_info(m);
-	print_vma_info(m);
+
+	// fix a task
+	chosen_task = pick_a_process(m);
+	print_vma_info(m, chosen_task);
 
 	return 0;
 }
