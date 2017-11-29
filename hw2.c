@@ -42,7 +42,18 @@ struct table_type {
 	int a;
 };
 struct vma_type {
-	int b;
+	unsigned long start_code;
+	unsigned long end_code;
+	unsigned long start_data;
+	unsigned long end_data;
+	unsigned long start_bss;
+	unsigned long end_bss;
+	unsigned long start_heap;
+	unsigned long end_heap;
+	unsigned long start_lib;
+	unsigned long end_lib;
+	unsigned long start_stack;
+	unsigned long end_stack;
 };
 struct tlet_type {
 	int period;
@@ -299,22 +310,18 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	seq_printf(m, "Process (%15s:%lu)\n", tsk->comm, tsk->pid);
 	print_bar(m);
 
-	vma_number = chosen_task->mm->map_count;
-	vm_it = chosen_task->mm->mmap;
-	mm = chosen_task->mm;
-
 	seq_printf(m, "0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
-		mm->start_code, mm->end_code, calc_pages(mm->start_code,mm->end_code));
+		vma->start_code, vma->end_code, calc_pages(vma->start_code,vma->end_code));
 	seq_printf(m, "0x%08lx - 0x%08lx : Data Area, %lu page(s)\n",
-		mm->start_data, mm->end_data, calc_pages(mm->start_data,mm->end_data));
+		vma->start_data, vma->end_data, calc_pages(vma->start_data,vma->end_data));
 	seq_printf(m, "0x%08lx - 0x%08lx : BSS Area, %lu page(s)\n",
-		mm->start_code, mm->end_code, calc_pages(mm->start_code,mm->end_code));
+		vma->start_bss, vma->end_bss, calc_pages(vma->start_bss,vma->end_bss));
 	seq_printf(m, "0x%08lx - 0x%08lx : Heap Area, %lu page(s)\n",
-		mm->start_brk, mm->brk, calc_pages(mm->start_brk,mm->brk));
+		vma->start_heap, vma->end_heap, calc_pages(vma->start_heap,vma->end_heap));
 	seq_printf(m, "0x%08lx - 0x%08lx : Shared Libraries Area, %lu page(s)\n",
-		mm->start_code, mm->end_code, calc_pages(mm->start_code,mm->end_code));
+		vma->start_lib, vma->end_lib, calc_pages(vma->start_lib,vma->end_lib));
 	seq_printf(m, "0x%08lx - 0x%08lx : Stack Area, %lu page(s)\n",
-		mm->start_stack, mm->end_code, calc_pages(mm->start_code,mm->end_code));
+		vma->start_stack, vma->end_stack, calc_pages(vma->start_stack,vma->end_stack));
 
 	return 0;
 }
@@ -464,7 +471,9 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct vma_type *vma_p = &(tempdata->vma);
 	struct task_type *tsk_p = &(tempdata->task);
 	struct task_struct *chosen_task;
+	unsigned long text, lib;
 
+	// store update time
 	tempdata->last_update_time = jiffies;
 
 	printk( "%s\n", "tlet called!" );
@@ -477,7 +486,31 @@ static void hw2_tasklet_handler(unsigned long data)
 	tsk_p->pid = chosen_task->pid;
 	memcpy(tsk_p->comm, chosen_task->comm, TASK_COMM_LEN * sizeof(char));
 
-	//wait for PERIOD time
+	// store vma info
+	// code
+	vma_p->start_code = chosen_task->mm->start_code;
+	vma_p->end_code = chosen_task->mm->end_code;
+	// data
+	vma_p->start_data = chosen_task->mm->start_data;
+	vma_p->end_data = chosen_task->mm->end_data;
+	// bss
+	vma_p->start_bss = chosen_task->mm->start_brk;
+	vma_p->end_bss = chosen_task->mm->brk;
+	// heap
+	vma_p->start_heap = chosen_task->mm->start_brk;
+	vma_p->end_heap = chosen_task->mm->brk;
+	// lib
+	vma_p->start_lib = chosen_task->mm->start_code;
+	vma_p->end_lib = chosen_task->mm->end_code;
+	// refered to: /fs/proc/task_mmu.c 
+	text = (PAGE_ALIGN(chosen_task->mm->end_code) - (chosen_task->mm->start_code & PAGE_MASK)) >> 10;
+	lib = (chosen_task->mm->exec_vm << (PAGE_SHIFT-10)) - text;
+	printk("VmLib: %lu", lib);
+	// stack
+	vma_p->start_stack = chosen_task->mm->start_stack;
+	vma_p->end_stack = chosen_task->mm->end_code;
+
+	// timer for PERIOD time
 	init_timer(&my_timer);
 	my_timer.function = schedule_tasklet;
 	my_timer.data = &period;
