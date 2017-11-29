@@ -10,6 +10,7 @@
 #include <linux/sort.h>
 #include <linux/slab.h>
 #include <linux/interrupt.h>
+#include <linux/random.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -212,6 +213,8 @@ static int print_vma_info(struct seq_file *m)
 	struct task_struct *chosen_task, *task;
 	struct vm_area_struct *vm_it;
 	int i, vma_number;
+	int counter=0;
+	int process=0;
 
 	// print title
 	print_bar(m);
@@ -219,11 +222,36 @@ static int print_vma_info(struct seq_file *m)
 	seq_printf(m, "Process (%15s:%lu)\n", "vi", 9634);
 	print_bar(m);
 
+	// choose a process	
+	for_each_process(task)
+	{
+		if(task->mm)
+			counter++;
+	}
+	// pick a random one
+	get_random_bytes(&process, sizeof(int));
+	process = process % counter;
+	// actual choosing
 	for_each_process(task)
 	{
 		if(task->mm) {
-			chosen_task = task;
-			break;
+			if(counter < 1){
+				chosen_task = task;
+				break;
+			}
+			else
+				counter--;
+		}
+	}
+	printk("chosend pid: %d", chosen_task->pid);
+	// account for possible process number change between two iterations
+	if (!chosen_task) {
+		for_each_process(task)
+		{
+			if(task->mm) {
+				chosen_task = task;
+				break;
+			}
 		}
 	}
 

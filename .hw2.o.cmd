@@ -895,6 +895,12 @@ deps_/home/jiwan/hw2/mymodule/hw2.o := \
   arch/x86/include/asm/sections.h \
   include/asm-generic/sections.h \
   arch/x86/include/asm/extable.h \
+  include/linux/random.h \
+    $(wildcard include/config/gcc/plugin/latent/entropy.h) \
+    $(wildcard include/config/arch/random.h) \
+  include/linux/once.h \
+  include/uapi/linux/random.h \
+  arch/x86/include/asm/archrandom.h \
 
 /home/jiwan/hw2/mymodule/hw2.o: $(deps_/home/jiwan/hw2/mymodule/hw2.o)
 
