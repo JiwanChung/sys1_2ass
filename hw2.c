@@ -11,6 +11,8 @@
 #include <linux/slab.h>
 #include <linux/interrupt.h>
 #include <linux/random.h>
+// x86_64 kernel
+#include <asm/pgtable_64.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -303,6 +305,24 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	return 0;
 }
 
+static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_task)
+{
+	pgd_t *pgd;
+	pud_t *pud;
+	pmd_t *pmd;
+	pte_t *pte;
+	// get address of the code start pointer
+	unsigned long addr = chosen_task->mm->start_code;
+	
+	// get pgtable pointers
+	printk("Addr: %lx", addr);
+	pgd = chosen_task->mm->pgd;
+	printk("PDG: %llx", *pgd);
+	
+
+	return 0;
+}
+
 // func for printing infos to proc.
 // jobs are delegated corresponding functions
 static int write_to_proc(struct seq_file *m)
@@ -315,7 +335,9 @@ static int write_to_proc(struct seq_file *m)
 
 	// fix a task
 	chosen_task = pick_a_process(m);
-	print_vma_info(m, chosen_task);
+
+	// print_vma_info(m, chosen_task);
+	print_pagetable_info(m, chosen_task);
 
 	return 0;
 }
@@ -345,52 +367,7 @@ hw2_fops = {
 // tasklet handler func
 static void hw2_tasklet_handler(unsigned long flag)
 {
-	//struct task_struct *task;
-	//int counter = 0;
-	//int process = 0;
-	//struct task_struct *chosen_task;
-	
-/*
-	// choose a process	
-	for_each_process(task)
-	{
-		if(task->mm)
-			counter++
-	}
-	// pick a random one
-	get_random_bytes(&process, sizeof(int));
-	process = process % counter;
-	// actual choosing
-	for_each_process(task)
-	{
-		if(task->mm) {
-			if(counter < 1){
-				chosen_task = task;
-				break;
-			}
-			else
-				counter--;
-		}
-	}
-	// account for possible process number change between two iterations
-	if (!chosen_task) {
-		for_each_process(task)
-		{
-			if(task->mm) {
-				chosen_task = task;
-				break;
-			}
-		}
-	}
-
-	// store vma stats of the task
-	vma_number = chosen_task->mm->map_count;
-	vm_it = chosen_task->mm->mmap;
-	for(i = 0;i < vma_number;i++) {
-	}
-
 	//wait for PERIOD time
-*/
 
 	printk( "%s\n", "tlet called!" );
 	return;
