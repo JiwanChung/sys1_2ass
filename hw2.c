@@ -471,7 +471,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct task_struct *chosen_task;
 	unsigned long text, lib;
 	struct vm_area_struct *vm_it;
-	int i, vma_number;
+	int i, vma_number, flag_start;
 
 	// store update time
 	tempdata->last_update_time = jiffies;
@@ -509,16 +509,18 @@ static void hw2_tasklet_handler(unsigned long data)
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
-
-	// initial go
-	vma_p->start_lib = vm_it->vm_start;
-	vm_it = vm_it->vm_next;
-	for(i = 1;i < vma_number;i++) {
+	flag_start = 0;
+	for(i = 0;i < vma_number;i++) {
 		if(vm_it->vm_flags & VM_EXEC & ~VM_WRITE & ~VM_STACK) {
-			//printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
-			vma_p->end_lib = vm_it->vm_end;
+			if(vm_it->vm_start > vma_p->end_code) {
+				//printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+				if(flag_start < 1) {
+					vma_p->start_lib = vm_it->vm_start;
+					flag_start++;
+				}
+				vma_p->end_lib = vm_it->vm_end;
+			}
 		}
-			
 		vm_it = vm_it->vm_next;
 	}
 	printk("VmLib calc: %lu - %lu, %lu", vma_p->start_lib, vma_p->end_lib, calc_pages(vma_p->start_lib, vma_p->end_lib));
