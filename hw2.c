@@ -384,7 +384,10 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	seq_printf(m, "        +Read/Write Bit         : %s\n", pte_flags(*pte) & _PAGE_RW ? "read-write": "read-only");
 	seq_printf(m, "        +Page Present Bit       : %u\n", pte_flags(*pte) & _PAGE_PRESENT);
 
-
+	// print start of physical address
+	print_bar(m);
+	seq_printf(m, "Start of Physical Address       : 0x%08lx\n", chosen_task->mm->mmap_base);
+	print_bar(m);
 
 	return 0;
 }
