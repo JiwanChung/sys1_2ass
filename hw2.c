@@ -14,6 +14,7 @@
 // x86_64 kernel
 #include <asm/pgtable.h>
 #include <asm/pgtable_64.h>
+#include <asm/pgtable_types.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -325,6 +326,23 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	printk("PMD: %llx", (*pmd).pmd);
 	pte = pte_offset_kernel(pmd, addr);
 	printk("PTE: %llx", (*pte).pte);
+
+	// print PGD title
+	print_bar(m);
+	seq_printf(m, "1 Level Paging: Page Directory Entry Information \n");
+	print_bar(m);
+
+	// print PGD info
+	seq_printf(m, "PGD     Base Address            : 0x%08lx\n", chosen_task->mm->mmap_base);
+	seq_printf(m, "code    PGD Address             : 0x%08lx\n", (*pgd).pgd); 
+	
+	seq_printf(m, "        +Page Size       : %s\n", pgd_flags(*pgd) & _PAGE_PSE ? "4MB" : "4KB");
+	seq_printf(m, "        +Accessed Bit       : %u\n", pgd_flags(*pgd) & _PAGE_ACCESSED);
+	seq_printf(m, "        +Cache Disable Bit      : %s\n", pgd_flags(*pgd) & _PAGE_PCD ? "true" : "false");
+	seq_printf(m, "        +Page Write-Through     : %s\n", pgd_flags(*pgd) & _PAGE_PWT ? "write-through" : "write-back");
+	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pgd_flags(*pgd) & _PAGE_USER ? "user" : "supervisor");
+	seq_printf(m, "        +Read/Write Bit         : %s\n", pgd_flags(*pgd) & _PAGE_RW ? "read-write": "read-only");
+	seq_printf(m, "        +Page Present Bit       : %u\n", pgd_flags(*pgd) & _PAGE_PRESENT);
 
 	return 0;
 }
