@@ -298,8 +298,6 @@ static struct task_struct* pick_a_process(void)
 // printing virtual memory address info
 static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 {
-	struct vm_area_struct *vm_it;
-	int i, vma_number;
 	struct mm_struct *mm;
 	struct task_type *tsk = &(tasklet_data.task);
 	struct vma_type *vma = &(tasklet_data.vma);
@@ -472,6 +470,8 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct task_type *tsk_p = &(tempdata->task);
 	struct task_struct *chosen_task;
 	unsigned long text, lib;
+	struct vm_area_struct *vm_it;
+	int i, vma_number;
 
 	// store update time
 	tempdata->last_update_time = jiffies;
@@ -506,6 +506,16 @@ static void hw2_tasklet_handler(unsigned long data)
 	text = (PAGE_ALIGN(chosen_task->mm->end_code) - (chosen_task->mm->start_code & PAGE_MASK)) >> 10;
 	lib = (chosen_task->mm->exec_vm << (PAGE_SHIFT-10)) - text;
 	printk("VmLib: %lu", lib);
+
+	vma_number = chosen_task->mm->map_count;
+	vm_it = chosen_task->mm->mmap;
+	for(i = 0;i < vma_number;i++) {
+		if(vm_it->vm_flags & VM_EXEC & ~VM_WRITE & ~VM_STACK)
+			printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+			
+		vm_it = vm_it->vm_next;
+	}
+
 	// stack
 	vma_p->start_stack = chosen_task->mm->start_stack;
 	vma_p->end_stack = chosen_task->mm->end_code;
