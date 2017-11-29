@@ -475,6 +475,7 @@ static void hw2_tasklet_handler(unsigned long data)
 
 	// store general info
 	tsk_p->pid = chosen_task->pid;
+	memcpy(tsk_p->comm, chosen_task->comm, TASK_COMM_LEN * sizeof(char));
 
 	//wait for PERIOD time
 	init_timer(&my_timer);
