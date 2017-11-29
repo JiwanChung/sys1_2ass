@@ -44,6 +44,7 @@ struct table_type {
 struct vma_type {
 	unsigned long start_code;
 	unsigned long end_code;
+	unsigned long pages_code;
 	unsigned long start_data;
 	unsigned long end_data;
 	unsigned long start_bss;
@@ -52,6 +53,7 @@ struct vma_type {
 	unsigned long end_heap;
 	unsigned long start_lib;
 	unsigned long end_lib;
+	unsigned long vm_lib;
 	unsigned long start_stack;
 	unsigned long end_stack;
 };
@@ -247,9 +249,7 @@ static int calc_pages(unsigned long start, unsigned long end)
 {
 	unsigned long pages;
 
-	pages = (end - start)/A_PAGE;
-	if ((end - start)%A_PAGE > 0)
-		pages++;
+	pages = (PAGE_ALIGN(end) - (start & PAGE_MASK)) >> PAGE_SHIFT;
 
 	return pages;
 }
@@ -309,7 +309,7 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	print_bar(m);
 
 	seq_printf(m, "0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
-		vma->start_code, vma->end_code, calc_pages(vma->start_code,vma->end_code));
+		vma->start_code, vma->end_code, vma->pages_code);
 	seq_printf(m, "0x%08lx - 0x%08lx : Data Area, %lu page(s)\n",
 		vma->start_data, vma->end_data, calc_pages(vma->start_data,vma->end_data));
 	seq_printf(m, "0x%08lx - 0x%08lx : BSS Area, %lu page(s)\n",
@@ -317,7 +317,7 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	seq_printf(m, "0x%08lx - 0x%08lx : Heap Area, %lu page(s)\n",
 		vma->start_heap, vma->end_heap, calc_pages(vma->start_heap,vma->end_heap));
 	seq_printf(m, "0x%08lx - 0x%08lx : Shared Libraries Area, %lu page(s)\n",
-		vma->start_lib, vma->end_lib, calc_pages(vma->start_lib,vma->end_lib));
+		vma->start_lib, vma->end_lib, vma->vm_lib);
 	seq_printf(m, "0x%08lx - 0x%08lx : Stack Area, %lu page(s)\n",
 		vma->start_stack, vma->end_stack, calc_pages(vma->start_stack,vma->end_stack));
 
@@ -490,6 +490,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	// code
 	vma_p->start_code = chosen_task->mm->start_code;
 	vma_p->end_code = chosen_task->mm->end_code;
+	vma_p->pages_code = (PAGE_ALIGN(chosen_task->mm->end_code) - (chosen_task->mm->start_code & PAGE_MASK)) >> PAGE_SHIFT;
 	// data
 	vma_p->start_data = chosen_task->mm->start_data;
 	vma_p->end_data = chosen_task->mm->end_data;
@@ -500,20 +501,17 @@ static void hw2_tasklet_handler(unsigned long data)
 	vma_p->start_heap = chosen_task->mm->start_brk;
 	vma_p->end_heap = chosen_task->mm->brk;
 	// lib
-	vma_p->start_lib = chosen_task->mm->start_code;
-	vma_p->end_lib = chosen_task->mm->end_code;
 	// refered to: /fs/proc/task_mmu.c 
 	text = (PAGE_ALIGN(chosen_task->mm->end_code) - (chosen_task->mm->start_code & PAGE_MASK)) >> 10;
 	lib = (chosen_task->mm->exec_vm << (PAGE_SHIFT-10)) - text;
-	printk("VmLib: %lu", lib);
-
+	vma_p->vm_lib = lib;
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
 	flag_start = 0;
 	for(i = 0;i < vma_number;i++) {
 		if(vm_it->vm_flags & VM_EXEC & ~VM_WRITE & ~VM_STACK) {
-			if(vm_it->vm_start > vma_p->end_code) {
-				//printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+			if(vm_it->vm_start > vma_p->end_code && vm_it->vm_end < chosen_task->mm->start_stack) {
+				printk("%lx - %lx, exec\n", vm_it->vm_start, vm_it->vm_end);
 				if(flag_start < 1) {
 					vma_p->start_lib = vm_it->vm_start;
 					flag_start++;
@@ -521,9 +519,13 @@ static void hw2_tasklet_handler(unsigned long data)
 				vma_p->end_lib = vm_it->vm_end;
 			}
 		}
+		else {
+			printk("%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
+		}
 		vm_it = vm_it->vm_next;
 	}
-	printk("VmLib calc: %lu - %lu, %lu", vma_p->start_lib, vma_p->end_lib, calc_pages(vma_p->start_lib, vma_p->end_lib));
+	printk("VmLib: %lu", lib/4);
+	printk("VmLib calc: %lx - %lx, %lu", vma_p->start_lib, vma_p->end_lib, calc_pages(vma_p->start_lib, vma_p->end_lib));
 
 	// stack
 	vma_p->start_stack = chosen_task->mm->start_stack;
