@@ -11,6 +11,7 @@
 #include <linux/slab.h>
 #include <linux/interrupt.h>
 #include <linux/random.h>
+#include <linux/timer.h>
 // x86_64 kernel
 #include <asm/pgtable.h>
 #include <asm/pgtable_64.h>
@@ -32,12 +33,25 @@ struct my_rss {
 	char comm[TASK_COMM_LEN];
 };
 
-// store period input
-static int period = PERIOD; 
+// store task data each time
+struct table_type {
+	int a;
+};
+struct vma_type {
+	int b;
+};
+struct tlet_type {
+	int period;
+	struct table_type table;
+	struct vma_type vma;
+};
+struct tlet_type tasklet_data = {5, NULL};
 
 // declaring memory-info-checking tasklet
 static void hw2_tasklet_handler(unsigned long flag);
-DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, (unsigned long) &period);
+DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, (unsigned long) &tasklet_data);
+
+struct timer_list my_timer;
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
@@ -223,7 +237,7 @@ static int calc_pages(unsigned long start, unsigned long end)
 	return pages;
 }
 
-static struct task_struct* pick_a_process(struct seq_file *m)
+static struct task_struct* pick_a_process(void)
 {
 	struct task_struct *chosen_task, *task;
 	unsigned int counter=0;
@@ -238,7 +252,6 @@ static struct task_struct* pick_a_process(struct seq_file *m)
 	// pick a random one
 	get_random_bytes(&process, sizeof(int));
 	process = process % counter;
-	seq_printf(m, "process: %u, counter: %u\n", process, counter);
 	// actual choosing
 	for_each_process(task)
 	{
@@ -261,7 +274,6 @@ static struct task_struct* pick_a_process(struct seq_file *m)
 			}
 		}
 	}
-	seq_printf(m, "chosen pid: %d\n", chosen_task->pid);
 	
 	return chosen_task;
 }
@@ -398,13 +410,18 @@ static int write_to_proc(struct seq_file *m)
 {
 	struct task_struct *chosen_task;
 
+	printk( "%s\n", "tlet called!" );
+
+	// fix a task
+	chosen_task = pick_a_process();
+	printk("PId: %d", chosen_task->pid);
+
+
 	//print_global_info(m);
 	//print_buddy_info(m);
 	//print_rss_info(m);
 
-	// fix a task
-	chosen_task = pick_a_process(m);
-
+	
 	// print_vma_info(m, chosen_task);
 	print_pagetable_info(m, chosen_task);
 
@@ -433,23 +450,48 @@ hw2_fops = {
 	.release = single_release,
 };
 
-// tasklet handler func
-static void hw2_tasklet_handler(unsigned long flag)
+// timer handler func
+static void schedule_tasklet(unsigned long arg)
 {
-	//wait for PERIOD time
+	tasklet_schedule(&hw2_tasklet);
+
+	return;
+}
+
+// tasklet handler func
+static void hw2_tasklet_handler(unsigned long data)
+{
+	struct tlet_type *tempdata = (struct tlet_type *) data;
+	int period = tempdata->period;
+	struct table_type *table_p = &(tempdata->table);
+	struct vma_type *vma_p = &(tempdata->vma);
+	struct task_struct *chosen_task;
 
 	printk( "%s\n", "tlet called!" );
+
+	// fix a task
+	chosen_task = pick_a_process();
+	printk("PId: %d", chosen_task->pid);
+
+	//wait for PERIOD time
+	init_timer(&my_timer);
+	my_timer.function = schedule_tasklet;
+	my_timer.data = &period;
+	my_timer.expires = jiffies + period * HZ;
+
+	// add timer
+	add_timer(&my_timer);
+
 	return;
 }
 
 // module init func
 static int __init hw2_init(void)
 {
-	period = PERIOD;
-
 	// load proc
 	proc_create("hw2", 0, NULL, &hw2_fops);
-	// load tasklet for reading memory info of a random process
+	
+	// load tasklet to read memory info of a random process
 	tasklet_schedule(&hw2_tasklet);
 	printk("tasklet scheduled");
 	
