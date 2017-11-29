@@ -1,0 +1,1 @@
+cmd_/home/jiwan/hw2/mymodule/tlet.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/jiwan/hw2/mymodule/tlet.ko /home/jiwan/hw2/mymodule/tlet.o /home/jiwan/hw2/mymodule/tlet.mod.o ;  true
