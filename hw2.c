@@ -12,6 +12,7 @@
 #include <linux/interrupt.h>
 #include <linux/random.h>
 // x86_64 kernel
+#include <asm/pgtable.h>
 #include <asm/pgtable_64.h>
 
 #define STUDENT_ID "2014117007"
@@ -316,9 +317,14 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	
 	// get pgtable pointers
 	printk("Addr: %lx", addr);
-	pgd = chosen_task->mm->pgd;
-	printk("PDG: %llx", *pgd);
-	
+	pgd = pgd_offset(chosen_task->mm, addr);
+	printk("PDG: %llx", (*pgd).pgd);
+	pud = pud_offset(pgd, addr);
+	printk("PUD: %llx", (*pud).pud);
+	pmd = pmd_offset(pud, addr);
+	printk("PMD: %llx", (*pmd).pmd);
+	pte = pte_offset_kernel(pmd, addr);
+	printk("PTE: %llx", (*pte).pte);
 
 	return 0;
 }
