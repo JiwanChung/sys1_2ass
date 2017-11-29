@@ -211,6 +211,7 @@ static int print_rss_info(struct seq_file *m)
 static int print_vma_info(struct seq_file *m)
 {
 	struct task_struct *chosen_task, *task;
+	struct mm_struct *mm;
 	struct vm_area_struct *vm_it;
 	int i, vma_number;
 	int counter=0;
@@ -235,15 +236,14 @@ static int print_vma_info(struct seq_file *m)
 	for_each_process(task)
 	{
 		if(task->mm) {
-			if(counter < 1){
+			if(process < 1){
 				chosen_task = task;
 				break;
 			}
 			else
-				counter--;
+				process--;
 		}
 	}
-	printk("chosend pid: %d", chosen_task->pid);
 	// account for possible process number change between two iterations
 	if (!chosen_task) {
 		for_each_process(task)
@@ -254,13 +254,22 @@ static int print_vma_info(struct seq_file *m)
 			}
 		}
 	}
+	printk("chosen pid: %d", chosen_task->pid);
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
+	mm = chosen_task->mm;
 	for(i = 0;i < vma_number;i++) {
 		printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
+		if(vm_it->vm_flags & VM_STACK)
+			printk("stack");
 		vm_it = vm_it->vm_next;
 	}
+	printk("map count: %d", mm->map_count);
+	printk("total_vm: %lu", mm->total_vm);
+	printk("exec_vm: %lu", mm->exec_vm);
+	printk("data_vm: %lu", mm->data_vm);
+	printk("stack_vm: %lu", mm->stack_vm);
 
 	return 0;
 }
