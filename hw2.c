@@ -333,18 +333,38 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	print_bar(m);
 
 	// print PGD info
-	seq_printf(m, "PGD     Base Address            : 0x%08lx\n", chosen_task->mm->mmap_base);
-	seq_printf(m, "code    PGD Address             : 0x%08lx\n", chosen_task->mm->pgd); 
+	seq_printf(m, "PGD     Base Address            : 0x%08lx\n", chosen_task->mm);
+	seq_printf(m, "code    PGD Address             : 0x%08lx\n", pgd_page_vaddr(*pgd)); 
 	seq_printf(m, "        PGD Value               : 0x%08lx\n", pgd_val(*pgd));	
 	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pgd_val(*pgd) >> PAGE_SHIFT);
 	
 	seq_printf(m, "        +Page Size              : %s\n", pgd_flags(*pgd) & _PAGE_PSE ? "4MB" : "4KB");
-	seq_printf(m, "        +Accessed Bit           : %u\n", pgd_flags(*pgd) & _PAGE_ACCESSED);
+	seq_printf(m, "        +Accessed Bit           : %u\n", pgd_flags(*pgd) & _PAGE_ACCESSED ? 1 : 0);
 	seq_printf(m, "        +Cache Disable Bit      : %s\n", pgd_flags(*pgd) & _PAGE_PCD ? "true" : "false");
 	seq_printf(m, "        +Page Write-Through     : %s\n", pgd_flags(*pgd) & _PAGE_PWT ? "write-through" : "write-back");
 	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pgd_flags(*pgd) & _PAGE_USER ? "user" : "supervisor");
 	seq_printf(m, "        +Read/Write Bit         : %s\n", pgd_flags(*pgd) & _PAGE_RW ? "read-write": "read-only");
 	seq_printf(m, "        +Page Present Bit       : %u\n", pgd_flags(*pgd) & _PAGE_PRESENT);
+
+	// print PUD title
+	print_bar(m);
+	seq_printf(m, "2 Level Paging: Page Upper Directory Entry Information \n");
+	print_bar(m);
+
+	// print PUD info
+	seq_printf(m, "code    PUD Address             : 0x%08lx\n", pud_page_vaddr(*pud));
+	seq_printf(m, "        PMD Value               : 0x%08lx\n", pud_val(*pud));
+	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pud_pfn(*pud)); 
+
+	// print PMD title
+	print_bar(m);
+	seq_printf(m, "3 Level Paging: Page Middle Directory Entry Information \n");
+	print_bar(m);
+
+	// print PMD info
+	seq_printf(m, "code    PMD Address             : 0x%08lx\n", pmd_page_vaddr(*pmd));
+	seq_printf(m, "        PMD Value               : 0x%08lx\n", pmd_val(*pmd));
+	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pmd_pfn(*pmd));
 
 	return 0;
 }
