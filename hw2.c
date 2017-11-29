@@ -1,3 +1,4 @@
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
@@ -320,7 +321,7 @@ static void hw2_tasklet_handler(unsigned long flag)
 	//wait for PERIOD time
 */
 
-	printk( "%s\n", (char *)data );
+	printk( "%s\n", "tlet called!" );
 	return;
 }
 
