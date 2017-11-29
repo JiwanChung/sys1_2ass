@@ -1,0 +1,91 @@
+00400000-00411000 r-xp 00000000 08:01 529754                             /usr/lib/gvfs/gvfsd-metadata
+00611000-00612000 r--p 00011000 08:01 529754                             /usr/lib/gvfs/gvfsd-metadata
+00612000-00613000 rw-p 00012000 08:01 529754                             /usr/lib/gvfs/gvfsd-metadata
+0136b000-013ad000 rw-p 00000000 00:00 0                                  [heap]
+7f07c0000000-7f07c0022000 rw-p 00000000 00:00 0 
+7f07c0022000-7f07c4000000 ---p 00000000 00:00 0 
+7f07c77ff000-7f07c7800000 ---p 00000000 00:00 0 
+7f07c7800000-7f07c8000000 rw-p 00000000 00:00 0 
+7f07c8000000-7f07c8021000 rw-p 00000000 00:00 0 
+7f07c8021000-7f07cc000000 ---p 00000000 00:00 0 
+7f07cc5d6000-7f07cc5d7000 ---p 00000000 00:00 0 
+7f07cc5d7000-7f07ccdd7000 rw-p 00000000 00:00 0 
+7f07ccdd7000-7f07cd796000 r--p 00000000 08:01 533278                     /usr/lib/locale/locale-archive
+7f07cd796000-7f07cd799000 r-xp 00000000 08:01 1709341                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7f07cd799000-7f07cd998000 ---p 00003000 08:01 1709341                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7f07cd998000-7f07cd999000 r--p 00002000 08:01 1709341                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7f07cd999000-7f07cd99a000 rw-p 00003000 08:01 1709341                    /lib/x86_64-linux-gnu/libdl-2.23.so
+7f07cd99a000-7f07cd9a1000 r-xp 00000000 08:01 1709471                    /lib/x86_64-linux-gnu/librt-2.23.so
+7f07cd9a1000-7f07cdba0000 ---p 00007000 08:01 1709471                    /lib/x86_64-linux-gnu/librt-2.23.so
+7f07cdba0000-7f07cdba1000 r--p 00006000 08:01 1709471                    /lib/x86_64-linux-gnu/librt-2.23.so
+7f07cdba1000-7f07cdba2000 rw-p 00007000 08:01 1709471                    /lib/x86_64-linux-gnu/librt-2.23.so
+7f07cdba2000-7f07cdc10000 r-xp 00000000 08:01 1709446                    /lib/x86_64-linux-gnu/libpcre.so.3.13.2
+7f07cdc10000-7f07cde10000 ---p 0006e000 08:01 1709446                    /lib/x86_64-linux-gnu/libpcre.so.3.13.2
+7f07cde10000-7f07cde11000 r--p 0006e000 08:01 1709446                    /lib/x86_64-linux-gnu/libpcre.so.3.13.2
+7f07cde11000-7f07cde12000 rw-p 0006f000 08:01 1709446                    /lib/x86_64-linux-gnu/libpcre.so.3.13.2
+7f07cde12000-7f07cde19000 r-xp 00000000 08:01 535157                     /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7f07cde19000-7f07ce018000 ---p 00007000 08:01 535157                     /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7f07ce018000-7f07ce019000 r--p 00006000 08:01 535157                     /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7f07ce019000-7f07ce01a000 rw-p 00007000 08:01 535157                     /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7f07ce01a000-7f07ce031000 r-xp 00000000 08:01 1709469                    /lib/x86_64-linux-gnu/libresolv-2.23.so
+7f07ce031000-7f07ce231000 ---p 00017000 08:01 1709469                    /lib/x86_64-linux-gnu/libresolv-2.23.so
+7f07ce231000-7f07ce232000 r--p 00017000 08:01 1709469                    /lib/x86_64-linux-gnu/libresolv-2.23.so
+7f07ce232000-7f07ce233000 rw-p 00018000 08:01 1709469                    /lib/x86_64-linux-gnu/libresolv-2.23.so
+7f07ce233000-7f07ce235000 rw-p 00000000 00:00 0 
+7f07ce235000-7f07ce254000 r-xp 00000000 08:01 1709475                    /lib/x86_64-linux-gnu/libselinux.so.1
+7f07ce254000-7f07ce453000 ---p 0001f000 08:01 1709475                    /lib/x86_64-linux-gnu/libselinux.so.1
+7f07ce453000-7f07ce454000 r--p 0001e000 08:01 1709475                    /lib/x86_64-linux-gnu/libselinux.so.1
+7f07ce454000-7f07ce455000 rw-p 0001f000 08:01 1709475                    /lib/x86_64-linux-gnu/libselinux.so.1
+7f07ce455000-7f07ce457000 rw-p 00000000 00:00 0 
+7f07ce457000-7f07ce470000 r-xp 00000000 08:01 1709508                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7f07ce470000-7f07ce66f000 ---p 00019000 08:01 1709508                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7f07ce66f000-7f07ce670000 r--p 00018000 08:01 1709508                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7f07ce670000-7f07ce671000 rw-p 00019000 08:01 1709508                    /lib/x86_64-linux-gnu/libz.so.1.2.8
+7f07ce671000-7f07ce674000 r-xp 00000000 08:01 535288                     /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.4800.2
+7f07ce674000-7f07ce873000 ---p 00003000 08:01 535288                     /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.4800.2
+7f07ce873000-7f07ce874000 r--p 00002000 08:01 535288                     /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.4800.2
+7f07ce874000-7f07ce875000 rw-p 00003000 08:01 535288                     /usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.4800.2
+7f07ce875000-7f07cea35000 r-xp 00000000 08:01 1709317                    /lib/x86_64-linux-gnu/libc-2.23.so
+7f07cea35000-7f07cec35000 ---p 001c0000 08:01 1709317                    /lib/x86_64-linux-gnu/libc-2.23.so
+7f07cec35000-7f07cec39000 r--p 001c0000 08:01 1709317                    /lib/x86_64-linux-gnu/libc-2.23.so
+7f07cec39000-7f07cec3b000 rw-p 001c4000 08:01 1709317                    /lib/x86_64-linux-gnu/libc-2.23.so
+7f07cec3b000-7f07cec3f000 rw-p 00000000 00:00 0 
+7f07cec3f000-7f07cec57000 r-xp 00000000 08:01 1709463                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7f07cec57000-7f07cee56000 ---p 00018000 08:01 1709463                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7f07cee56000-7f07cee57000 r--p 00017000 08:01 1709463                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7f07cee57000-7f07cee58000 rw-p 00018000 08:01 1709463                    /lib/x86_64-linux-gnu/libpthread-2.23.so
+7f07cee58000-7f07cee5c000 rw-p 00000000 00:00 0 
+7f07cee5c000-7f07cee92000 r-xp 00000000 08:01 788829                     /usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so
+7f07cee92000-7f07cf092000 ---p 00036000 08:01 788829                     /usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so
+7f07cf092000-7f07cf097000 r--p 00036000 08:01 788829                     /usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so
+7f07cf097000-7f07cf098000 rw-p 0003b000 08:01 788829                     /usr/lib/x86_64-linux-gnu/gvfs/libgvfscommon.so
+7f07cf098000-7f07cf1a7000 r-xp 00000000 08:01 1709359                    /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+7f07cf1a7000-7f07cf3a6000 ---p 0010f000 08:01 1709359                    /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+7f07cf3a6000-7f07cf3a7000 r--p 0010e000 08:01 1709359                    /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+7f07cf3a7000-7f07cf3a8000 rw-p 0010f000 08:01 1709359                    /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+7f07cf3a8000-7f07cf3a9000 rw-p 00000000 00:00 0 
+7f07cf3a9000-7f07cf3fb000 r-xp 00000000 08:01 535312                     /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.4800.2
+7f07cf3fb000-7f07cf5fa000 ---p 00052000 08:01 535312                     /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.4800.2
+7f07cf5fa000-7f07cf5fb000 r--p 00051000 08:01 535312                     /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.4800.2
+7f07cf5fb000-7f07cf5fc000 rw-p 00052000 08:01 535312                     /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.4800.2
+7f07cf5fc000-7f07cf77c000 r-xp 00000000 08:01 535274                     /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.4800.2
+7f07cf77c000-7f07cf97c000 ---p 00180000 08:01 535274                     /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.4800.2
+7f07cf97c000-7f07cf980000 r--p 00180000 08:01 535274                     /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.4800.2
+7f07cf980000-7f07cf982000 rw-p 00184000 08:01 535274                     /usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.4800.2
+7f07cf982000-7f07cf984000 rw-p 00000000 00:00 0 
+7f07cf984000-7f07cf9aa000 r-xp 00000000 08:01 1709289                    /lib/x86_64-linux-gnu/ld-2.23.so
+7f07cfb67000-7f07cfb6f000 rw-p 00000000 00:00 0 
+7f07cfb6f000-7f07cfb8d000 r-xp 00000000 08:01 1709491                    /lib/x86_64-linux-gnu/libudev.so.1.6.4
+7f07cfb8d000-7f07cfb8e000 r--p 0001d000 08:01 1709491                    /lib/x86_64-linux-gnu/libudev.so.1.6.4
+7f07cfb8e000-7f07cfb8f000 rw-p 0001e000 08:01 1709491                    /lib/x86_64-linux-gnu/libudev.so.1.6.4
+7f07cfb8f000-7f07cfb90000 rw-p 00000000 00:00 0 
+7f07cfb9e000-7f07cfba6000 rw-s 00000000 08:01 1590739                    /home/jiwan/.local/share/gvfs-metadata/home-0f6f5461.log
+7f07cfba6000-7f07cfba7000 r--s 00000000 08:01 1590707                    /home/jiwan/.local/share/gvfs-metadata/home
+7f07cfba7000-7f07cfba9000 rw-p 00000000 00:00 0 
+7f07cfba9000-7f07cfbaa000 r--p 00025000 08:01 1709289                    /lib/x86_64-linux-gnu/ld-2.23.so
+7f07cfbaa000-7f07cfbab000 rw-p 00026000 08:01 1709289                    /lib/x86_64-linux-gnu/ld-2.23.so
+7f07cfbab000-7f07cfbac000 rw-p 00000000 00:00 0 
+7ffed40e7000-7ffed4108000 rw-p 00000000 00:00 0                          [stack]
+7ffed41e9000-7ffed41eb000 r--p 00000000 00:00 0                          [vvar]
+7ffed41eb000-7ffed41ed000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]

@@ -19,6 +19,7 @@
 #define MAX_BUF_PID 5
 #define MAX_BUF_RSS 10
 #define PERIOD 5 // debug period value
+#define A_PAGE 4096 // page size
 
 // struct to store rss info
 struct my_rss {
@@ -207,6 +208,17 @@ static int print_rss_info(struct seq_file *m)
 	return 0;
 }	
 
+static int calc_pages(unsigned long start, unsigned long end)
+{
+	unsigned long pages;
+
+	pages = (end - start)/A_PAGE;
+	if ((end - start)%A_PAGE > 0)
+		pages++;
+
+	return pages;
+}
+
 // printing virtual memory address info
 static int print_vma_info(struct seq_file *m)
 {
@@ -232,6 +244,7 @@ static int print_vma_info(struct seq_file *m)
 	// pick a random one
 	get_random_bytes(&process, sizeof(int));
 	process = process % counter;
+	seq_printf(m, "process: %d, counter: %d\n", process, counter);
 	// actual choosing
 	for_each_process(task)
 	{
@@ -244,6 +257,7 @@ static int print_vma_info(struct seq_file *m)
 				process--;
 		}
 	}
+	seq_printf(m, "chosen pid: %d\n", chosen_task->pid);
 	// account for possible process number change between two iterations
 	if (!chosen_task) {
 		for_each_process(task)
@@ -254,22 +268,29 @@ static int print_vma_info(struct seq_file *m)
 			}
 		}
 	}
-	printk("chosen pid: %d", chosen_task->pid);
+	seq_printf(m, "chosen pid: %d\n", chosen_task->pid);
 
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
 	mm = chosen_task->mm;
 	for(i = 0;i < vma_number;i++) {
-		printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
+		seq_printf(m, "%lx - %lx\n", vm_it->vm_start, vm_it->vm_end);
 		if(vm_it->vm_flags & VM_STACK)
-			printk("stack");
+			seq_printf(m, "stack\n");
+		else if(vm_it->vm_flags & VM_SHARED)
+			seq_printf(m, "shared\n");
 		vm_it = vm_it->vm_next;
 	}
-	printk("map count: %d", mm->map_count);
-	printk("total_vm: %lu", mm->total_vm);
-	printk("exec_vm: %lu", mm->exec_vm);
-	printk("data_vm: %lu", mm->data_vm);
-	printk("stack_vm: %lu", mm->stack_vm);
+	seq_printf(m, "map count: %d\n", mm->map_count);
+	seq_printf(m, "total_vm: %lu\n", mm->total_vm);
+	seq_printf(m, "exec_vm: %lu\n", mm->exec_vm);
+	seq_printf(m, "data_vm: %lu\n", mm->data_vm);
+	seq_printf(m, "stack_vm: %lu\n", mm->stack_vm);
+	seq_printf(m, "scode: %lx, ecode: %lx\n", mm->start_code, mm->end_code);
+	seq_printf(m, "sdata: %lx, edata: %lx\n", mm->start_data, mm->end_data);
+
+	seq_printf(m, "0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
+		mm->start_code, mm->end_code, calc_pages(mm->start_code,mm->end_code));
 
 	return 0;
 }
