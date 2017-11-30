@@ -95,16 +95,19 @@ struct tlet_type tasklet_data = {PERIOD, NULL};
 static void hw2_tasklet_handler(unsigned long flag);
 DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, (unsigned long) &tasklet_data);
 
+// define timer struct: later used to call tasklet
 struct timer_list my_timer;
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
+// for using for_each_zone macro
 struct pglist_data *first_online_pgdat(void)
 {
 	return NODE_DATA(first_online_node);
 }
 
 // also copy-pasted
+// for using for_each_zone macro
 struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 {
 	int nid = next_online_node(pgdat->node_id);
@@ -115,6 +118,7 @@ struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 }
 
 // also copy-pasted
+// for using for_each_zone macro
 struct zone *next_zone(struct zone *zone)
 {
 	pg_data_t *pgdat = zone->zone_pgdat;
@@ -177,6 +181,7 @@ static int compare(const void *lhs, const void *rhs)
 	struct my_rss lhs_rss = *(const struct my_rss *)(lhs);
 	struct my_rss rhs_rss = *(const struct my_rss *)(rhs);
 
+	// picking larger value
 	if (lhs_rss.rss < rhs_rss.rss) return 1;
 	if (lhs_rss.rss > rhs_rss.rss) return -1;
 	printk("comp: %lu", lhs_rss.rss);
@@ -321,7 +326,7 @@ static struct task_struct* pick_a_process(void)
 }
 
 // printing virtual memory address info
-static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
+static int print_vma_info(struct seq_file *m)
 {
 	struct mm_struct *mm;
 	struct task_type *tsk = &(tasklet_data.task);
@@ -349,7 +354,7 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 	return 0;
 }
 
-static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_task)
+static int print_pagetable_info(struct seq_file *m)
 {
 	struct table_type *pgt_p = &(tasklet_data.table);
 
@@ -431,15 +436,12 @@ static int write_to_proc(struct seq_file *m)
 
 	printk( "%s\n", "tlet called!" );
 
-	// fix a task
-	chosen_task = pick_a_process();
-	printk("PId: %d", chosen_task->pid);
-
+	// call each print functions
 	print_global_info(m);
-	//print_buddy_info(m);
-	//print_rss_info(m);
-	print_vma_info(m, chosen_task);
-	//print_pagetable_info(m, chosen_task);
+	print_buddy_info(m);
+	print_rss_info(m);
+	print_vma_info(m);
+	print_pagetable_info(m);
 
 	return 0;
 }
@@ -644,7 +646,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	pgt_p->pte.present = pte_flags(*pte) & _PAGE_PRESENT;
 
 	// store physical addr start
-	pgt_p->physic_addr = chosen_task->mm->mmap_base;
+	pgt_p->physic_addr = pgt_p->pte.pt_val & PAGE_MASK;
 
 	// timer for PERIOD time
 	init_timer(&my_timer);
