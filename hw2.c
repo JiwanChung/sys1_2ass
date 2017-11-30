@@ -29,7 +29,7 @@
 #define A_PAGE 4096 // page size
 
 // tasklet run period
-int period;
+int period = PERIOD;
 
 // struct to store rss info
 struct my_rss {
@@ -193,7 +193,7 @@ static int compare(const void *lhs, const void *rhs)
 	// picking larger value
 	if (lhs_rss.rss < rhs_rss.rss) return 1;
 	if (lhs_rss.rss > rhs_rss.rss) return -1;
-	printk("comp: %lu", lhs_rss.rss);
+	//printk("comp: %lu", lhs_rss.rss);
 	return 0;
 }
 
@@ -237,7 +237,7 @@ static int print_rss_info(struct seq_file *m)
 		{
 			// init val
 			val = 0;
-			printk("pid: %d", task->pid);
+			//printk("pid: %d", task->pid);
 			
 			t_mm = task->mm;
 			// get anon val
@@ -246,7 +246,7 @@ static int print_rss_info(struct seq_file *m)
 			val += get_mm_counter(t_mm, MM_FILEPAGES);
 			// get shmem val
 			val += get_mm_counter(t_mm, MM_SHMEMPAGES);
-			printk("val: %lu", val);	
+			//printk("val: %lu", val);	
 			// store if the rss value is larger than the least stored
 			if (rss_list[RSS_NUM-1].rss < val)
 			{
@@ -256,13 +256,10 @@ static int print_rss_info(struct seq_file *m)
 
 				sort(rss_list, RSS_NUM, sizeof(struct my_rss), &compare, NULL);
 			}
-			printk("---");
-			for(i = 0; i < RSS_NUM; i++){
-				printk("SORTED rss: %lu, pid: %d", rss_list[i].rss, rss_list[i].pid);
-			}
+			//printk("---");
 		}
 	}
-	printk("iter done");
+	//printk("iter done");
 
 	// print legend
 	seq_printf(m, "%-4s", "pid");
@@ -435,8 +432,6 @@ static int print_pagetable_info(struct seq_file *m)
 // jobs are delegated corresponding functions
 static int write_to_proc(struct seq_file *m)
 {
-	printk( "%s\n", "tlet called!" );
-
 	// call each print functions
 	print_global_info(m);
 	print_buddy_info(m);
@@ -535,10 +530,10 @@ static void hw2_tasklet_handler(unsigned long data)
 			name = 's';
 
 		// store based on name
-		if (name)
+		/*if (name)
 			printk("%lu - %lu, %c", vm_it->vm_start, vm_it->vm_end, name);
 		else
-			printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
+			printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);*/
 		if(flag_start < 1) {
 			// code
 			flag_start++;
@@ -593,13 +588,9 @@ static void hw2_tasklet_handler(unsigned long data)
 	
 	// get page tables
 	pgd = pgd_offset(chosen_task->mm, addr);
-	printk("Pgd: %lx", (*pgd).pgd);
 	pud = pud_offset(pgd, addr);
-	printk("PUD: %lx", (*pud).pud);
 	pmd = pmd_offset(pud, addr);
-	printk("PMD: %lx", (*pmd).pmd);
 	pte = pte_offset_kernel(pmd, addr);
-	printk("PTE: %lx", (*pte).pte);
 
 	// store pgd
 	pgt_p->pgd.base_addr = (unsigned long)chosen_task->mm;
