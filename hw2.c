@@ -531,27 +531,31 @@ static void hw2_tasklet_handler(unsigned long data)
 			// bss 
 			vma_p->start_bss = vm_it->vm_start;
 			vma_p->end_bss = vm_it->vm_end;
-			if(name == "[heap]")
-				flag_start++;
+			flag_start++;
 		}
-		else if(flag_start < 4) {
+		else if(name == "[heap]") {
 			// heap
 			vma_p->start_heap = vm_it->vm_start;
 			vma_p->end_heap = vm_it->vm_end;
 			flag_start++;
 		}
-		else if(name = "[stack]") {
+		else if(name == "[stack]") {
 			vma_p->start_stack = vm_it->vm_start;
 			vma_p->end_stack = vm_it->vm_end;
 		}	
 		else if(flag_start < 5) {
+			// before shared lib
+			if(vm_it->vm_flags & VM_EXEC)
+				flag_start++;
+		}
+		else if(flag_start < 6) {
 			// shared lib init 
 			vma_p->start_lib = vm_it->vm_start;
 			vma_p->end_lib = vm_it->vm_end;
 				
 			flag_start++;
 		}
-		else if(flag_start < 6) {
+		else if(flag_start < 5) {
 			// shared lib
 			vma_p->end_lib = vm_it->vm_end;
 		}
