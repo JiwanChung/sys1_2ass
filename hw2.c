@@ -38,9 +38,8 @@ struct task_type {
 	pid_t pid;
 	char comm[TASK_COMM_LEN];
 };
-struct table_type {
-	int a;
-};
+
+// for vma store
 struct vma_type {
 	unsigned long start_code;
 	unsigned long end_code;
@@ -57,6 +56,32 @@ struct vma_type {
 	unsigned long start_stack;
 	unsigned long end_stack;
 };
+
+// store pgtable data each time
+struct pg_table {
+	unsigned long base_addr;
+	unsigned long pt_addr;
+	unsigned long pt_val;
+	unsigned long pfn_addr;
+	bool size;
+	bool accessed;
+	bool cache_disable;
+	bool write_through;
+	bool user;
+	bool read_write;
+	bool present;
+	bool dirty
+};
+struct table_type {
+	unsigned long addr;
+	unsigned long physic_addr;
+	struct pg_table pgd;
+	struct pg_table pud;
+	struct pg_table pmd;
+	struct pg_table pte;
+};
+
+// tasklet data struct
 struct tlet_type {
 	int period;
 	struct table_type table;
@@ -465,7 +490,9 @@ static void hw2_tasklet_handler(unsigned long data)
 {
 	struct tlet_type *tempdata = (struct tlet_type *) data;
 	int period = tempdata->period;
-	struct table_type *table_p = &(tempdata->table);
+
+	// for vma
+	struct table_type *pgt_p = &(tempdata->table);
 	struct vma_type *vma_p = &(tempdata->vma);
 	struct task_type *tsk_p = &(tempdata->task);
 	struct task_struct *chosen_task;
@@ -473,6 +500,15 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct vm_area_struct *vm_it;
 	int i, vma_number, flag_start;
 	const char *name = NULL;
+
+	// for page table
+	pgd_t *pgd;
+	pud_t *pud;
+	pmd_t *pmd;
+	pte_t *pte;
+	// get address of the code start pointer
+	unsigned long addr = chosen_task->mm->start_code;
+
 
 	// store update time
 	tempdata->last_update_time = jiffies;
@@ -566,6 +602,60 @@ static void hw2_tasklet_handler(unsigned long data)
 	// stack
 	vma_p->start_stack = chosen_task->mm->start_stack & PAGE_MASK;
 	vma_p->end_stack = PAGE_ALIGN(chosen_task->mm->env_end);
+
+	// store page table info
+	addr = chosen_task->mm->start_code;
+	pgt_p->addr = addr;
+	
+	// get page tables
+	pgd = pgd_offset(chosen_task->mm, addr);
+	printk("Pgd: %llx", (*pgd).pgd);
+	pud = pud_offset(pgd, addr);
+	printk("PUD: %llx", (*pud).pud);
+	pmd = pmd_offset(pud, addr);
+	printk("PMD: %llx", (*pmd).pmd);
+	pte = pte_offset_kernel(pmd, addr);
+	printk("PTE: %llx", (*pte).pte);
+
+	// store pgd
+	pgt_p->pgd.base_addr = chosen_task->mm;
+	pgt_p->pgd.pt_addr = pgd_page_vaddr(*pgd);
+	pgt_p->pgd.pt_val = pgd_val(*pgd);
+	pgt_p->pgd.pfn_addr = pgd_val(*pgd) >> PAGE_SHIFT;
+
+	pgt_p->pgd.size = pgd_flags(*pgd) & _PAGE_PSE;
+	pgt_p->pgd.accessed = pgd_flags(*pgd) & _PAGE_ACCESSED;
+	pgt_p->pgd.cache_disable = pgd_flags(*pgd) & _PAGE_PCD;
+	pgt_p->pgd.write_through = pgd_flags(*pgd) & _PAGE_PWT;
+	pgt_p->pgd.user = pgd_flags(*pgd) & _PAGE_USER;
+	pgt_p->pgd.read_write = pgd_flags(*pgd) & _PAGE_RW;
+	pgt_p->pgd.present = pgd_flags(*pgd) & _PAGE_PRESENT;
+
+	// store PUD
+	pgt_p->pud.pt_addr = pud_page_vaddr(*pud);
+	pgt_p->pud.pt_val = pud_val(*pud);
+	pgt_p->pud.pfn_addr = pud_pfn(*pud);
+
+	// store PMD
+	pgt_p->pmd.pt_addr = pmd_page_vaddr(*pmd);
+	pgt_p->pmd.pt_val = pmd_val(*pmd);
+	pgt_p->pmd.pfn_addr = pmd_pfn(*pmd);
+
+	// store PTE
+	pgt_p->pte.pt_addr = pte_page(*pte);
+	pgt_p->pte.pt_val = pte_val(*pte);
+	pgt_p->pte.pfn_addr = pte_pfn(*pte);
+	
+	pgt_p->pte.dirty = pte_flags(*pte) & _PAGE_DIRTY;
+	pgt_p->pte.accessed = pte_flags(*pte) & _PAGE_ACCESSED;
+	pgt_p->pte.cache_disable = pte_flags(*pte) & _PAGE_PCD;
+	pgt_p->pte.write_through = pte_flags(*pte) & _PAGE_PWT;
+	pgt_p->pte.user = pte_flags(*pte) & _PAGE_USER;
+	pgt_p->pte.read_write = pte_flags(*pte) & _PAGE_RW;
+	pgt_p->pte.present = pte_flags(*pte) & _PAGE_PRESENT;
+
+	// store physical addr start
+	pgt_p->physic_addr = chosen_task->mm->mmap_base;
 
 	// timer for PERIOD time
 	init_timer(&my_timer);
