@@ -16,6 +16,8 @@
 #include <asm/pgtable.h>
 #include <asm/pgtable_64.h>
 #include <asm/pgtable_types.h>
+// parameter passing
+#include <linux/moduleparam.h>
 
 #define STUDENT_ID "2014117007"
 #define STUDENT_NAME "Jiwan Chung"
@@ -25,6 +27,9 @@
 #define MAX_BUF_RSS 10
 #define PERIOD 5 // debug period value
 #define A_PAGE 4096 // page size
+
+// tasklet run period
+int period;
 
 // struct to store rss info
 struct my_rss {
@@ -97,6 +102,10 @@ DECLARE_TASKLET(hw2_tasklet, hw2_tasklet_handler, (unsigned long) &tasklet_data)
 
 // define timer struct: later used to call tasklet
 struct timer_list my_timer;
+
+// define module parameter
+module_param(period, int, 0);
+MODULE_PARM_DESC(period, "tasklet run period");
 
 // required functions not exported by the kernel code,
 // hence copy-n-pasted
@@ -663,6 +672,9 @@ static void hw2_tasklet_handler(unsigned long data)
 // module init func
 static int __init hw2_init(void)
 {
+	// store period
+	tasklet_data.period = period;
+
 	// load proc
 	proc_create("hw2", 0, NULL, &hw2_fops);
 	
