@@ -496,23 +496,65 @@ static void hw2_tasklet_handler(unsigned long data)
 	vma_p->start_data = chosen_task->mm->start_data;
 	vma_p->end_data = chosen_task->mm->end_data;
 	// lib
-	text = (PAGE_ALIGN(chosen_task->mm->end_code) - (chosen_task->mm->start_code & PAGE_MASK)) >> 10;
 	vma_number = chosen_task->mm->map_count;
 	vm_it = chosen_task->mm->mmap;
 	flag_start = 0;
 	for(i = 0;i < vma_number;i++) {
+		// naming VMA
+		// refered to: /fs/proc/task_mmu.c
+		name = NULL;
 		if (vm_it->vm_ops && vm_it->vm_ops->name) {
 			name = vm_it->vm_ops->name(vm_it);
 		}
+		if (!name) {
+			if (vm_it->vm_start <= chosen_task->mm->brk && vm_it->vm_end >= chosen_task->mm->start_brk) {
+				name = "[heap]";
+			}
+			if (vm_it->vm_start <= vm_it->vm_mm->start_stack &&	vm_it->vm_end >= vm_it->vm_mm->start_stack)
+				name = "[stack]";
+		}
+
+		// store based on name
 		if (name)
 			printk("%lu - %lu, %s", vm_it->vm_start, vm_it->vm_end, name);
 		else
 			printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
 		if(flag_start < 1) {
-			vma_p->start_lib = vm_it->vm_start;
+			// code
 			flag_start++;
 		}
-		vma_p->end_lib = vm_it->vm_end;
+		else if(flag_start < 2) {
+			// data 
+			flag_start++;
+		}
+		else if(flag_start < 3) {
+			// bss 
+			vma_p->start_bss = vm_it->vm_start;
+			vma_p->end_bss = vm_it->vm_end;
+			if(name == "[heap]")
+				flag_start++;
+		}
+		else if(flag_start < 4) {
+			// heap
+			vma_p->start_heap = vm_it->vm_start;
+			vma_p->end_heap = vm_it->vm_end;
+			flag_start++;
+		}
+		else if(name = "[stack]") {
+			vma_p->start_stack = vm_it->vm_start;
+			vma_p->end_stack = vm_it->vm_end;
+		}	
+		else if(flag_start < 5) {
+			// shared lib init 
+			vma_p->start_lib = vm_it->vm_start;
+			vma_p->end_lib = vm_it->vm_end;
+				
+			flag_start++;
+		}
+		else if(flag_start < 6) {
+			// shared lib
+			vma_p->end_lib = vm_it->vm_end;
+		}
 
 		vm_it = vm_it->vm_next;
 	}
