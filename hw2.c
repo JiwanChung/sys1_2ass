@@ -351,23 +351,12 @@ static int print_vma_info(struct seq_file *m, struct task_struct *chosen_task)
 
 static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_task)
 {
+	struct table_type *pgt_p = &(tasklet_data.table);
+
 	pgd_t *pgd;
 	pud_t *pud;
 	pmd_t *pmd;
 	pte_t *pte;
-	// get address of the code start pointer
-	unsigned long addr = chosen_task->mm->start_code;
-	
-	// get pgtable pointers
-	printk("Addr: %lx", addr);
-	pgd = pgd_offset(chosen_task->mm, addr);
-	printk("PDG: %llx", (*pgd).pgd);
-	pud = pud_offset(pgd, addr);
-	printk("PUD: %llx", (*pud).pud);
-	pmd = pmd_offset(pud, addr);
-	printk("PMD: %llx", (*pmd).pmd);
-	pte = pte_offset_kernel(pmd, addr);
-	printk("PTE: %llx", (*pte).pte);
 
 	// print PGD title
 	print_bar(m);
@@ -375,18 +364,18 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	print_bar(m);
 
 	// print PGD info
-	seq_printf(m, "PGD     Base Address            : 0x%08lx\n", chosen_task->mm);
-	seq_printf(m, "code    PGD Address             : 0x%08lx\n", pgd_page_vaddr(*pgd)); 
-	seq_printf(m, "        PGD Value               : 0x%08lx\n", pgd_val(*pgd));	
-	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pgd_val(*pgd) >> PAGE_SHIFT);
+	seq_printf(m, "PGD     Base Address            : 0x%08lx\n", pgt_p->pgd.base_addr);
+	seq_printf(m, "code    PGD Address             : 0x%08lx\n", pgt_p->pgd.pt_addr); 
+	seq_printf(m, "        PGD Value               : 0x%08lx\n", pgt_p->pgd.pt_val);	
+	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pgt_p->pgd.pfn_addr);
 	
-	seq_printf(m, "        +Page Size              : %s\n", pgd_flags(*pgd) & _PAGE_PSE ? "4MB" : "4KB");
-	seq_printf(m, "        +Accessed Bit           : %u\n", pgd_flags(*pgd) & _PAGE_ACCESSED ? 1 : 0);
-	seq_printf(m, "        +Cache Disable Bit      : %s\n", pgd_flags(*pgd) & _PAGE_PCD ? "true" : "false");
-	seq_printf(m, "        +Page Write-Through     : %s\n", pgd_flags(*pgd) & _PAGE_PWT ? "write-through" : "write-back");
-	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pgd_flags(*pgd) & _PAGE_USER ? "user" : "supervisor");
-	seq_printf(m, "        +Read/Write Bit         : %s\n", pgd_flags(*pgd) & _PAGE_RW ? "read-write": "read-only");
-	seq_printf(m, "        +Page Present Bit       : %u\n", pgd_flags(*pgd) & _PAGE_PRESENT);
+	seq_printf(m, "        +Page Size              : %s\n", pgt_p->pgd.size ? "4MB" : "4KB");
+	seq_printf(m, "        +Accessed Bit           : %u\n", pgt_p->pgd.accessed ? 1 : 0);
+	seq_printf(m, "        +Cache Disable Bit      : %s\n", pgt_p->pgd.cache_disable ? "true" : "false");
+	seq_printf(m, "        +Page Write-Through     : %s\n",	pgt_p->pgd.write_through ? "write-through" : "write-back");
+	seq_printf(m, "        +User/Supervisor Bit    : %s\n",	pgt_p->pgd.user ? "user" : "supervisor");
+	seq_printf(m, "        +Read/Write Bit         : %s\n",	pgt_p->pgd.read_write ? "read-write": "read-only");
+	seq_printf(m, "        +Page Present Bit       : %u\n",	pgt_p->pgd.present);
 
 	// print PUD title
 	print_bar(m);
@@ -394,9 +383,9 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	print_bar(m);
 
 	// print PUD info
-	seq_printf(m, "code    PUD Address             : 0x%08lx\n", pud_page_vaddr(*pud));
-	seq_printf(m, "        PMD Value               : 0x%08lx\n", pud_val(*pud));
-	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pud_pfn(*pud)); 
+	seq_printf(m, "code    PUD Address             : 0x%08lx\n", pgt_p->pud.pt_addr);
+	seq_printf(m, "        PUD Value               : 0x%08lx\n", pgt_p->pud.pt_val);
+	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pgt_p->pud.pfn_addr); 
 
 	// print PMD title
 	print_bar(m);
@@ -404,9 +393,9 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	print_bar(m);
 
 	// print PMD info
-	seq_printf(m, "code    PMD Address             : 0x%08lx\n", pmd_page_vaddr(*pmd));
-	seq_printf(m, "        PMD Value               : 0x%08lx\n", pmd_val(*pmd));
-	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pmd_pfn(*pmd));
+	seq_printf(m, "code    PMD Address             : 0x%08lx\n", pgt_p->pmd.pt_addr);
+	seq_printf(m, "        PMD Value               : 0x%08lx\n", pgt_p->pmd.pt_val);
+	seq_printf(m, "        +PFN Address            : 0x%08lx\n", pgt_p->pmd.pfn_addr);
 
 	// print PTE title
 	print_bar(m);
@@ -414,21 +403,21 @@ static int print_pagetable_info(struct seq_file *m, struct task_struct *chosen_t
 	print_bar(m);
 
 	// print PTE info
-	seq_printf(m, "code    PTE Address             : 0x%08lx\n", pte_page(*pte));
-	seq_printf(m, "        PTE Value               : 0x%08lx\n", pte_val(*pte));
-	seq_printf(m, "        +Page Base Address      : 0x%08lx\n", pte_pfn(*pte));
+	seq_printf(m, "code    PTE Address             : 0x%08lx\n", pgt_p->pte.pt_addr);
+	seq_printf(m, "        PTE Value               : 0x%08lx\n", pgt_p->pte.pt_val);
+	seq_printf(m, "        +Page Base Address      : 0x%08lx\n", pgt_p->pte.pfn_addr);
 
-	seq_printf(m, "        +Dirty Bit              : %u\n", pte_flags(*pte) & _PAGE_DIRTY ? 1 : 0);
-	seq_printf(m, "        +Accessed Bit           : %u\n", pte_flags(*pte) & _PAGE_ACCESSED ? 1 : 0);
-	seq_printf(m, "        +Cache Disable Bit      : %s\n", pte_flags(*pte) & _PAGE_PCD ? "true" : "false");
-	seq_printf(m, "        +Page Write-Through     : %s\n", pte_flags(*pte) & _PAGE_PWT ? "write-through" : "write-back");
-	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pte_flags(*pte) & _PAGE_USER ? "user" : "supervisor");
-	seq_printf(m, "        +Read/Write Bit         : %s\n", pte_flags(*pte) & _PAGE_RW ? "read-write": "read-only");
-	seq_printf(m, "        +Page Present Bit       : %u\n", pte_flags(*pte) & _PAGE_PRESENT);
+	seq_printf(m, "        +Dirty Bit              : %u\n", pgt_p->pte.dirty ? 1 : 0);
+	seq_printf(m, "        +Accessed Bit           : %u\n", pgt_p->pte.accessed ? 1 : 0);
+	seq_printf(m, "        +Cache Disable Bit      : %s\n", pgt_p->pte.cache_disable ? "true" : "false");
+	seq_printf(m, "        +Page Write-Through     : %s\n", pgt_p->pte.write_through ? "write-through" : "write-back");
+	seq_printf(m, "        +User/Supervisor Bit    : %s\n", pgt_p->pte.user ? "user" : "supervisor");
+	seq_printf(m, "        +Read/Write Bit         : %s\n", pgt_p->pte.read_write ? "read-write": "read-only");
+	seq_printf(m, "        +Page Present Bit       : %u\n", pgt_p->pte.present);
 
 	// print start of physical address
 	print_bar(m);
-	seq_printf(m, "Start of Physical Address       : 0x%08lx\n", chosen_task->mm->mmap_base);
+	seq_printf(m, "Start of Physical Address       : 0x%08lx\n", pgt_p->physic_addr);
 	print_bar(m);
 
 	return 0;
