@@ -75,7 +75,7 @@ struct pg_table {
 	bool user;
 	bool read_write;
 	bool present;
-	bool dirty
+	bool dirty;
 };
 struct table_type {
 	unsigned long addr;
@@ -94,7 +94,7 @@ struct tlet_type {
 	struct task_type task;
 	unsigned long last_update_time;
 };
-struct tlet_type tasklet_data = {PERIOD, NULL};
+struct tlet_type tasklet_data;
 
 // declaring memory-info-checking tasklet
 static void hw2_tasklet_handler(unsigned long flag);
@@ -158,7 +158,7 @@ static int print_global_info(struct seq_file *m)
 {
 	print_bar(m);
 	seq_printf(m, "Student ID: %s	Name: %s\n", STUDENT_ID, STUDENT_NAME);
-	seq_printf(m, "Last update time %llu ms\n", tasklet_data.last_update_time);
+	seq_printf(m, "Last update time %lu ms\n", tasklet_data.last_update_time);
 	return 0;
 }
 
@@ -258,7 +258,7 @@ static int print_rss_info(struct seq_file *m)
 			}
 			printk("---");
 			for(i = 0; i < RSS_NUM; i++){
-				printk("SORTED rss: %lu, pid: ", rss_list[i].rss, rss_list[i].pid);
+				printk("SORTED rss: %lu, pid: %d", rss_list[i].rss, rss_list[i].pid);
 			}
 		}
 	}
@@ -284,7 +284,7 @@ static int print_rss_info(struct seq_file *m)
 	return 0;
 }	
 
-static int calc_pages(unsigned long start, unsigned long end)
+static unsigned long calc_pages(unsigned long start, unsigned long end)
 {
 	unsigned long pages;
 
@@ -295,7 +295,7 @@ static int calc_pages(unsigned long start, unsigned long end)
 
 static struct task_struct* pick_a_process(void)
 {
-	struct task_struct *chosen_task, *task;
+	struct task_struct *chosen_task=NULL, *task;
 	unsigned int counter=0;
 	unsigned int process=0;
 
@@ -337,14 +337,13 @@ static struct task_struct* pick_a_process(void)
 // printing virtual memory address info
 static int print_vma_info(struct seq_file *m)
 {
-	struct mm_struct *mm;
 	struct task_type *tsk = &(tasklet_data.task);
 	struct vma_type *vma = &(tasklet_data.vma);
 
 	// print title
 	print_bar(m);
 	seq_printf(m, "Virtual Memory Address Information\n");
-	seq_printf(m, "Process (%15s:%lu)\n", tsk->comm, tsk->pid);
+	seq_printf(m, "Process (%15s:%d)\n", tsk->comm, tsk->pid);
 	print_bar(m);
 
 	seq_printf(m, "0x%08lx - 0x%08lx : Code Area, %lu page(s)\n",
@@ -366,11 +365,6 @@ static int print_vma_info(struct seq_file *m)
 static int print_pagetable_info(struct seq_file *m)
 {
 	struct table_type *pgt_p = &(tasklet_data.table);
-
-	pgd_t *pgd;
-	pud_t *pud;
-	pmd_t *pmd;
-	pte_t *pte;
 
 	// print PGD title
 	print_bar(m);
@@ -441,8 +435,6 @@ static int print_pagetable_info(struct seq_file *m)
 // jobs are delegated corresponding functions
 static int write_to_proc(struct seq_file *m)
 {
-	struct task_struct *chosen_task;
-
 	printk( "%s\n", "tlet called!" );
 
 	// call each print functions
@@ -495,11 +487,10 @@ static void hw2_tasklet_handler(unsigned long data)
 	struct table_type *pgt_p = &(tempdata->table);
 	struct vma_type *vma_p = &(tempdata->vma);
 	struct task_type *tsk_p = &(tempdata->task);
-	struct task_struct *chosen_task;
-	unsigned long text, lib;
+	struct task_struct *chosen_task=NULL;
 	struct vm_area_struct *vm_it;
 	int i, vma_number, flag_start;
-	const char *name = NULL;
+	char name = ' ';
 
 	// for page table
 	pgd_t *pgd;
@@ -508,7 +499,6 @@ static void hw2_tasklet_handler(unsigned long data)
 	pte_t *pte;
 	// get address of the code start pointer
 	unsigned long addr = chosen_task->mm->start_code;
-
 
 	// store update time
 	tempdata->last_update_time = jiffies;
@@ -538,21 +528,15 @@ static void hw2_tasklet_handler(unsigned long data)
 	for(i = 0;i < vma_number;i++) {
 		// naming VMA
 		// refered to: /fs/proc/task_mmu.c
-		name = NULL;
-		if (vm_it->vm_ops && vm_it->vm_ops->name) {
-			name = vm_it->vm_ops->name(vm_it);
-		}
-		if (!name) {
-			if (vm_it->vm_start <= chosen_task->mm->brk && vm_it->vm_end >= chosen_task->mm->start_brk) {
-				name = "[heap]";
-			}
-			if (vm_it->vm_start <= vm_it->vm_mm->start_stack &&	vm_it->vm_end >= vm_it->vm_mm->start_stack)
-				name = "[stack]";
-		}
+		name = ' ';
+		if (vm_it->vm_start <= chosen_task->mm->brk && vm_it->vm_end >= chosen_task->mm->start_brk) 
+			name = 'h';
+		if (vm_it->vm_start <= vm_it->vm_mm->start_stack &&	vm_it->vm_end >= vm_it->vm_mm->start_stack)
+			name = 's';
 
 		// store based on name
 		if (name)
-			printk("%lu - %lu, %s", vm_it->vm_start, vm_it->vm_end, name);
+			printk("%lu - %lu, %c", vm_it->vm_start, vm_it->vm_end, name);
 		else
 			printk("%lu - %lu", vm_it->vm_start, vm_it->vm_end);
 		if(flag_start < 1) {
@@ -569,13 +553,13 @@ static void hw2_tasklet_handler(unsigned long data)
 			vma_p->end_bss = vm_it->vm_end;
 			flag_start++;
 		}
-		else if(name == "[heap]") {
+		else if(name == 'h') {
 			// heap
 			vma_p->start_heap = vm_it->vm_start;
 			vma_p->end_heap = vm_it->vm_end;
 			flag_start++;
 		}
-		else if(name == "[stack]") {
+		else if(name == 's') {
 			vma_p->start_stack = vm_it->vm_start;
 			vma_p->end_stack = vm_it->vm_end;
 		}	
@@ -609,16 +593,16 @@ static void hw2_tasklet_handler(unsigned long data)
 	
 	// get page tables
 	pgd = pgd_offset(chosen_task->mm, addr);
-	printk("Pgd: %llx", (*pgd).pgd);
+	printk("Pgd: %lx", (*pgd).pgd);
 	pud = pud_offset(pgd, addr);
-	printk("PUD: %llx", (*pud).pud);
+	printk("PUD: %lx", (*pud).pud);
 	pmd = pmd_offset(pud, addr);
-	printk("PMD: %llx", (*pmd).pmd);
+	printk("PMD: %lx", (*pmd).pmd);
 	pte = pte_offset_kernel(pmd, addr);
-	printk("PTE: %llx", (*pte).pte);
+	printk("PTE: %lx", (*pte).pte);
 
 	// store pgd
-	pgt_p->pgd.base_addr = chosen_task->mm;
+	pgt_p->pgd.base_addr = (unsigned long)chosen_task->mm;
 	pgt_p->pgd.pt_addr = pgd_page_vaddr(*pgd);
 	pgt_p->pgd.pt_val = pgd_val(*pgd);
 	pgt_p->pgd.pfn_addr = pgd_val(*pgd) >> PAGE_SHIFT;
@@ -642,7 +626,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	pgt_p->pmd.pfn_addr = pmd_pfn(*pmd);
 
 	// store PTE
-	pgt_p->pte.pt_addr = pte_page(*pte);
+	pgt_p->pte.pt_addr = (unsigned long)pte_page(*pte);
 	pgt_p->pte.pt_val = pte_val(*pte);
 	pgt_p->pte.pfn_addr = pte_pfn(*pte);
 	
@@ -660,7 +644,7 @@ static void hw2_tasklet_handler(unsigned long data)
 	// timer for PERIOD time
 	init_timer(&my_timer);
 	my_timer.function = schedule_tasklet;
-	my_timer.data = &period;
+	my_timer.data = (unsigned long)(&period);
 	my_timer.expires = jiffies + period * HZ;
 
 	// add timer
